@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora 3D GeoGebra - Suite Profesional de Cálculo Vectorial</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Three.js para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Math.js para evaluar funciones dinámicas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <!-- KaTeX para renderizado en tiempo real de LaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Tesseract.js para OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- jsPDF & html2canvas para generación de reportes PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        #canvas-container { width: 100%; height: 100vh; display: block; }
+        .glass-panel { background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        input, select { background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.2); color: white; }
+        input:focus, select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3); }
+        
+        .key-btn {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            padding: 0.4rem 0.2rem;
+            text-align: center;
+            transition: all 0.1s ease;
+            user-select: none;
+            cursor: pointer;
+        }
+        .key-btn:hover { background: #334155; border-color: #38bdf8; color: #38bdf8; }
+        .key-btn:active { transform: scale(0.95); background: #0284c7; color: white; }
+        .key-action { background: #1e293b; color: #fbbf24; }
+        .key-fn { background: #0f172a; color: #38bdf8; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="flex h-screen w-screen overflow-hidden">
+
+    <!-- PANEL LATERAL DE CONTROL -->
+    <div class="w-[430px] h-full glass-panel flex flex-col z-10 shadow-2xl overflow-y-auto p-4">
+        <div class="mb-2 pb-2 border-b border-slate-700 flex justify-between items-center">
+            <div>
+                <h1 class="text-base font-bold text-sky-400 flex items-center gap-2">
+                    <span>📐</span> Cálculo Vectorial 3D Pro
+                </h1>
+                <p class="text-[10px] text-slate-400">Integración Numérica y Visualización Avanzada</p>
+            </div>
+            <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow cursor-pointer flex items-center gap-1">
+                📄 Exportar PDF
+            </button>
+        </div>
+
+        <!-- SECCIÓN TEMPLATES / BIBLIOTECA PRESETS -->
+        <div class="mb-2.5 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+            <label class="block text-[11px] font-semibold text-slate-300 mb-1">📚 Biblioteca de Plantillas Predeterminadas:</label>
+            <select id="presetSelect" onchange="cargarPlantilla()" class="w-full text-xs px-2 py-1.5 rounded">
+                <option value="">-- Seleccionar Ejercicio Clásico --</option>
+                <option value="tetraedro">Tetraedro Plano (1 - x - y)</option>
+                <option value="cuenco">Cuenco Parabólico (z = x² + y²)</option>
+                <option value="cono">Cono Invertido (z = √(x² + y²))</option>
+                <option value="hemisferio">Hemisferio Esférico (z = √(4 - x² - y²))</option>
+            </select>
+        </div>
+
+        <!-- SECCIÓN CARGA DE FOTOS Y OCR -->
+        <div class="mb-2.5 bg-slate-900/60 p-2 rounded-lg border border-slate-700 space-y-1.5">
+            <label class="block text-[11px] font-semibold text-sky-400">📷 Escáner de Fotos (OCR):</label>
+            <input type="file" id="imageUploader" accept="image/*" multiple class="w-full text-[10px] text-slate-400 file:mr-2 file:py-0.5 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-500 cursor-pointer">
+            <div id="imageGallery" class="flex gap-2 overflow-x-auto pb-1 hidden"></div>
+            <button onclick="escanearYAnalizarFotos()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded text-xs transition shadow cursor-pointer">
+                🤖 Escanear Fotos y Resolver
+            </button>
+            <div id="statusMsg" class="text-[10px] text-emerald-400 text-center font-semibold hidden"></div>
+        </div>
+
+        <!-- SECCIÓN DE COORDENADAS -->
+        <div class="mb-2.5">
+            <label class="block font-semibold text-slate-300 text-xs mb-1">🌐 Sistema de Coordenadas:</label>
+            <select id="coordSystem" class="w-full text-xs px-2 py-1.5 rounded font-semibold">
+                <option value="cartesianas">Cartesianas (x, y, z)</option>
+                <option value="cilindricas">Cilíndricas (r, θ, z)</option>
+                <option value="esfericas">Esféricas (ρ, θ, ϕ)</option>
+            </select>
+        </div>
+
+        <!-- ENTRADAS DE FUNCIONES Y LÍMITES VARIABLES -->
+        <div class="space-y-2 text-xs">
+            <div>
+                <label class="block font-semibold text-slate-300 mb-0.5">Superficie Superior (z_sup):</label>
+                <input type="text" id="zSupInput" value="" placeholder="Ej: 1 - x - y o sqrt(4 - x^2)" oninput="actualizarKaTeX()" class="math-input w-full px-2 py-1 rounded font-mono">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-300 mb-0.5">Superficie Inferior (z_inf):</label>
+                <input type="text" id="zInfInput" value="" placeholder="Ej: 0 o x^2 + y^2" oninput="actualizarKaTeX()" class="math-input w-full px-2 py-1 rounded font-mono">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-0.5">Límites Y (Min / Max):</label>
+                    <div class="flex gap-1">
+                        <input type="text" id="yMin" value="" placeholder="0" oninput="actualizarKaTeX()" class="math-input w-full px-1.5 py-1 rounded text-center font-mono">
+                        <input type="text" id="yMax" value="" placeholder="1 - x" oninput="actualizarKaTeX()" class="math-input w-full px-1.5 py-1 rounded text-center font-mono">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-0.5">Límites X (Min / Max):</label>
+                    <div class="flex gap-1">
+                        <input type="number" id="xMin" value="" placeholder="0" step="0.5" oninput="actualizarKaTeX()" class="w-full px-1.5 py-1 rounded text-center font-mono">
+                        <input type="number" id="xMax" value="" placeholder="1" step="0.5" oninput="actualizarKaTeX()" class="w-full px-1.5 py-1 rounded text-center font-mono">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-300 mb-0.5">Función de Densidad ρ(x,y,z):</label>
+                <input type="text" id="densityInput" value="" placeholder="Ej: z o x + y" oninput="actualizarKaTeX()" class="math-input w-full px-2 py-1 rounded font-mono">
+            </div>
+
+            <!-- VISUALIZADOR REALTIME DE LATEX CON KATEX -->
+            <div class="bg-slate-900/90 p-2 rounded border border-slate-800 text-center">
+                <span class="text-[10px] text-slate-400 block mb-1">Vista Previa LaTeX en Tiempo Real:</span>
+                <div id="katexPreview" class="text-sky-300 font-mono text-xs min-h-[24px] flex items-center justify-center"></div>
+            </div>
+
+            <!-- BOTONES PRINCIPALES -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <button onclick="calcularYSolver()" class="bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 rounded-lg transition shadow text-xs cursor-pointer">
+                    ⚡ Calcular y Graficar
+                </button>
+                <button onclick="toggleProcedimiento()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 rounded-lg transition shadow text-xs cursor-pointer">
+                    📖 Ver Procedimiento
+                </button>
+            </div>
+
+            <div>
+                <button onclick="toggleKeyboard()" class="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold cursor-pointer">
+                    ⌨️ Teclado Matemático
+                </button>
+            </div>
+        </div>
+
+        <!-- PROCEDIMIENTO PASO A PASO (MODO EDUCATIVO) -->
+        <div id="procedimientoBox" class="mt-2.5 p-2.5 bg-slate-900/95 border border-slate-700 rounded-lg hidden text-[11px] space-y-2">
+            <h3 class="font-bold text-amber-400 flex items-center gap-1">📘 Planteamiento de la Integral Iterada:</h3>
+            <div id="katexFormula" class="overflow-x-auto py-1 text-center"></div>
+            <p id="procedimientoTexto" class="text-slate-300 text-[10px] leading-relaxed"></p>
+        </div>
+
+        <!-- PRESENTACIÓN AMPLIADA DE RESULTADOS -->
+        <div class="mt-3 pt-2 border-t border-slate-700 flex-1">
+            <h2 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Resultados Analíticos:</h2>
+            <div id="resultsReportBox" class="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+                <div class="bg-slate-900/80 p-2 rounded border border-slate-800">
+                    <span class="text-slate-400 block">Volumen (V)</span>
+                    <span id="resVol" class="font-mono text-sky-300 font-bold text-xs block">--</span>
+                    <span class="text-[9px] text-slate-500">Unidad: u³</span>
+                </div>
+                <div class="bg-slate-900/80 p-2 rounded border border-slate-800">
+                    <span class="text-slate-400 block">Masa Total (M)</span>
+                    <span id="resMass" class="font-mono text-emerald-300 font-bold text-xs block">--</span>
+                    <span class="text-[9px] text-slate-500">Unidad: u.m.</span>
+                </div>
+                <div class="bg-slate-900/80 p-2 rounded border border-slate-800">
+                    <span class="text-slate-400 block">Centro de Masa</span>
+                    <span id="resCoM" class="font-mono text-amber-400 font-bold text-[10px] block">--</span>
+                    <span class="text-[9px] text-slate-500">(x̄, ȳ, z̄)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-2 text-[10px] text-slate-500 text-center">
+            Universidad de La Guajira • Ingeniería de Sistemas 2026
+        </div>
+    </div>
+
+    <!-- VIEWPORT 3D Y CONTROLES FLOTANTES -->
+    <div id="canvas-container" class="flex-1 relative">
+        <!-- CONTROLES FLOTANTES DE CÁMARA Y NAVEGACIÓN -->
+        <div class="absolute top-4 right-4 bg-slate-900/90 backdrop-blur p-2 rounded-lg border border-slate-700 text-xs text-slate-300 z-10 shadow-lg flex gap-1.5">
+            <button onclick="setCameraView('iso')" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-[11px]">Isométrica</button>
+            <button onclick="setCameraView('xy')" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-[11px]">Planta (XY)</button>
+            <button onclick="setCameraView('xz')" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-[11px]">Perfil (XZ)</button>
+            <button onclick="setCameraView('yz')" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-[11px]">Perfil (YZ)</button>
+            <button onclick="toggleGrid()" class="bg-indigo-700 hover:bg-indigo-600 px-2 py-1 rounded text-[11px] font-semibold">Planos On/Off</button>
+        </div>
+    </div>
+
+    <!-- TECLADO MATEMÁTICO GEOGEBRA -->
+    <div id="virtual-keyboard" class="fixed bottom-3 right-4 w-[520px] glass-panel rounded-xl shadow-2xl p-3 z-50 border border-slate-700 transition-all duration-300 hidden">
+        <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-700/60">
+            <div class="flex gap-1.5">
+                <button onclick="switchTab('num')" id="tab-num" class="text-xs px-2.5 py-1 rounded bg-sky-600 text-white font-semibold">123</button>
+                <button onclick="switchTab('fx')" id="tab-fx" class="text-xs px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white font-semibold">f(x)</button>
+                <button onclick="switchTab('geo')" id="tab-geo" class="text-xs px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:text-white font-semibold">Puntos/Vectores</button>
+            </div>
+            <span class="text-[11px] text-slate-400">Teclado GeoGebra</span>
+            <button onclick="toggleKeyboard()" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded hover:bg-slate-800">✕</button>
+        </div>
+
+        <div id="keyboard-num-panel" class="grid grid-cols-6 gap-1">
+            <button class="key-btn key-fn" onclick="insertSymbol('x')">x</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('y')">y</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('z')">z</button>
+            <button class="key-btn key-action" onclick="insertSymbol('^2')">x²</button>
+            <button class="key-btn key-action" onclick="insertSymbol('^')">x^y</button>
+            <button class="key-btn key-action" onclick="insertSymbol('sqrt(')">√</button>
+
+            <button class="key-btn" onclick="insertSymbol('7')">7</button>
+            <button class="key-btn" onclick="insertSymbol('8')">8</button>
+            <button class="key-btn" onclick="insertSymbol('9')">9</button>
+            <button class="key-btn key-action" onclick="insertSymbol(' * ')">×</button>
+            <button class="key-btn key-action" onclick="insertSymbol(' / ')">÷</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('pi')">π</button>
+
+            <button class="key-btn" onclick="insertSymbol('4')">4</button>
+            <button class="key-btn" onclick="insertSymbol('5')">5</button>
+            <button class="key-btn" onclick="insertSymbol('6')">6</button>
+            <button class="key-btn key-action" onclick="insertSymbol(' + ')">+</button>
+            <button class="key-btn key-action" onclick="insertSymbol(' - ')">-</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('e')">e</button>
+
+            <button class="key-btn" onclick="insertSymbol('1')">1</button>
+            <button class="key-btn" onclick="insertSymbol('2')">2</button>
+            <button class="key-btn" onclick="insertSymbol('3')">3</button>
+            <button class="key-btn key-action" onclick="insertSymbol('(')">(</button>
+            <button class="key-btn key-action" onclick="insertSymbol(')')">)</button>
+            <button class="key-btn bg-rose-900/60 text-rose-300 border-rose-700 hover:bg-rose-800" onclick="deleteChar()">⌫</button>
+
+            <button class="key-btn col-span-2" onclick="insertSymbol('0')">0</button>
+            <button class="key-btn" onclick="insertSymbol('.')">.</button>
+            <button class="key-btn key-action" onclick="insertSymbol('abs(')">|x|</button>
+            <button class="key-btn col-span-2 bg-sky-600 text-white hover:bg-sky-500 font-sans" onclick="calcularYSolver()">Igual (=)</button>
+        </div>
+
+        <div id="keyboard-fx-panel" class="grid grid-cols-5 gap-1 hidden">
+            <button class="key-btn key-fn" onclick="insertSymbol('sin(')">sen</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('cos(')">cos</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('tan(')">tan</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('asin(')">sen⁻¹</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('acos(')">cos⁻¹</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('log(')">ln</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('exp(')">eˣ</button>
+            <button class="key-btn bg-rose-900/60 text-rose-300 border-rose-700 hover:bg-rose-800" onclick="deleteChar()">⌫</button>
+        </div>
+
+        <div id="keyboard-geo-panel" class="grid grid-cols-5 gap-1 hidden">
+            <button class="key-btn key-action" onclick="insertSymbol('(')">(</button>
+            <button class="key-btn key-action" onclick="insertSymbol(')')">)</button>
+            <button class="key-btn key-action" onclick="insertSymbol(', ')">,</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('i')">î</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('j')">ĵ</button>
+            <button class="key-btn key-fn" onclick="insertSymbol('k')">k̂</button>
+            <button class="key-btn bg-rose-900/60 text-rose-300 border-rose-700 hover:bg-rose-800" onclick="deleteChar()">⌫</button>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls;
+        let solidMeshGroup = null, comMarker = null, comArrow = null, axesGroup = null;
+        let activeInput = document.getElementById('zSupInput');
+
+        // PRESETS / PLANTILLAS CLÁSICAS
+        function cargarPlantilla() {
+            const val = document.getElementById('presetSelect').value;
+            if (val === 'tetraedro') {
+                document.getElementById('zSupInput').value = "1 - x - y";
+                document.getElementById('zInfInput').value = "0";
+                document.getElementById('yMin').value = "0";
+                document.getElementById('yMax').value = "1 - x";
+                document.getElementById('xMin').value = "0";
+                document.getElementById('xMax').value = "1";
+                document.getElementById('densityInput').value = "z";
+            } else if (val === 'cuenco') {
+                document.getElementById('zSupInput').value = "4";
+                document.getElementById('zInfInput').value = "x^2 + y^2";
+                document.getElementById('yMin').value = "-2";
+                document.getElementById('yMax').value = "2";
+                document.getElementById('xMin').value = "-2";
+                document.getElementById('xMax').value = "2";
+                document.getElementById('densityInput').value = "z";
+            } else if (val === 'cono') {
+                document.getElementById('zSupInput').value = "3";
+                document.getElementById('zInfInput').value = "sqrt(x^2 + y^2)";
+                document.getElementById('yMin').value = "-3";
+                document.getElementById('yMax').value = "3";
+                document.getElementById('xMin').value = "-3";
+                document.getElementById('xMax').value = "3";
+                document.getElementById('densityInput').value = "1";
+            } else if (val === 'hemisferio') {
+                document.getElementById('zSupInput').value = "sqrt(4 - x^2 - y^2)";
+                document.getElementById('zInfInput').value = "0";
+                document.getElementById('yMin').value = "-2";
+                document.getElementById('yMax').value = "2";
+                document.getElementById('xMin').value = "-2";
+                document.getElementById('xMax').value = "2";
+                document.getElementById('densityInput').value = "1";
+            }
+            actualizarKaTeX();
+            calcularYSolver();
+        }
+
+        // KATEX REALTIME PREVIEW
+        function actualizarKaTeX() {
+            const zSup = document.getElementById('zSupInput').value || "z_{sup}";
+            const zInf = document.getElementById('zInfInput').value || "z_{inf}";
+            const rho = document.getElementById('densityInput').value || "\\rho";
+            const latexStr = `\\int \\int \\int_{${zInf}}^{${zSup}} ${rho} \\, dz \\, dy \\, dx`;
+            katex.render(latexStr, document.getElementById('katexPreview'), { throwOnError: false });
+        }
+
+        // CONTROL DE CÁMARA RÁPIDA
+        function setCameraView(view) {
+            if (view === 'iso') {
+                camera.position.set(6, 5, 7);
+            } else if (view === 'xy') {
+                camera.position.set(0, 0, 10);
+            } else if (view === 'xz') {
+                camera.position.set(0, 10, 0);
+            } else if (view === 'yz') {
+                camera.position.set(10, 0, 0);
+            }
+            controls.target.set(0, 0, 0);
+            controls.update();
+        }
+
+        function toggleGrid() {
+            if (axesGroup) axesGroup.visible = !axesGroup.visible;
+        }
+
+        function toggleProcedimiento() {
+            document.getElementById('procedimientoBox').classList.toggle('hidden');
+        }
+
+        // ESCANEO OCR FOTOS
+        async function escanearYAnalizarFotos() {
+            const fileInput = document.getElementById('imageUploader');
+            const statusMsg = document.getElementById('statusMsg');
+
+            if (fileInput.files.length === 0) {
+                alert("Por favor sube al menos una foto.");
+                return;
+            }
+
+            statusMsg.classList.remove('hidden');
+            statusMsg.innerText = "🔍 Escaneando imagen OCR...";
+
+            let textoCompleto = "";
+            for (let i = 0; i < fileInput.files.length; i++) {
+                try {
+                    const result = await Tesseract.recognize(fileInput.files[i], 'spa+eng');
+                    textoCompleto += " " + result.data.text;
+                } catch (e) {}
+            }
+
+            let clean = textoCompleto.toLowerCase();
+            if (clean.includes('paraboloide') || clean.includes('cuenco')) {
+                document.getElementById('presetSelect').value = "cuenco";
+            } else {
+                document.getElementById('presetSelect').value = "tetraedro";
+            }
+            cargarPlantilla();
+            statusMsg.innerText = "¡Ejercicio detectado con éxito!";
+            setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+        }
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(6, 5, 7);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            dirLight.position.set(10, 20, 15);
+            scene.add(dirLight);
+
+            axesGroup = new THREE.Group();
+            const axesHelper = new THREE.AxesHelper(6);
+            axesGroup.add(axesHelper);
+            const gridHelper = new THREE.GridHelper(12, 12, 0x38bdf8, 0x334155);
+            gridHelper.rotation.x = Math.PI / 2;
+            axesGroup.add(gridHelper);
+            scene.add(axesGroup);
+
+            window.addEventListener('resize', onWindowResize);
+            actualizarKaTeX();
+            animate();
+        }
+
+        // MOTOR DE INTEGRACIÓN NUMÉRICA AVANZADA EN 3D
+        function calcularYSolver() {
+            const zSupExpr = document.getElementById('zSupInput').value;
+            const zInfExpr = document.getElementById('zInfInput').value;
+            const yMinExpr = document.getElementById('yMin').value;
+            const yMaxExpr = document.getElementById('yMax').value;
+            const rhoExpr = document.getElementById('densityInput').value;
+            const xMinVal = document.getElementById('xMin').value;
+            const xMaxVal = document.getElementById('xMax').value;
+
+            if (!zSupExpr || !zInfExpr || !yMinExpr || !yMaxExpr || xMinVal === "" || xMaxVal === "" || !rhoExpr) {
+                alert("Completa todos los límites y la función de densidad.");
+                return;
+            }
+
+            if (solidMeshGroup) scene.remove(solidMeshGroup);
+            if (comMarker) scene.remove(comMarker);
+            if (comArrow) scene.remove(comArrow);
+
+            solidMeshGroup = new THREE.Group();
+
+            const xMin = parseFloat(xMinVal);
+            const xMax = parseFloat(xMaxVal);
+
+            let fSup, fInf, fYMin, fYMax, fDensity;
+            try {
+                fSup = math.compile(zSupExpr);
+                fInf = math.compile(zInfExpr);
+                fYMin = math.compile(yMinExpr);
+                fYMax = math.compile(yMaxExpr);
+                fDensity = math.compile(rhoExpr);
+            } catch (e) {
+                alert("Error en la sintaxis matemática.");
+                return;
+            }
+
+            // VALIDACIÓN DE SEGURIDAD
+            let isDomainValid = false;
+            for (let test = 0; test <= 5; test++) {
+                let tx = xMin + (test / 5) * (xMax - xMin);
+                try {
+                    let tyM = fYMax.evaluate({x: tx});
+                    let tyI = fYMin.evaluate({x: tx});
+                    if (tyM > tyI) { isDomainValid = true; break; }
+                } catch(e) {}
+            }
+            if (!isDomainValid) {
+                alert("Alerta de límites: El límite inferior es mayor o igual al superior en el dominio especificado.");
+                return;
+            }
+
+            const steps = 30;
+            const dx = (xMax - xMin) / steps;
+
+            let volume = 0, mass = 0;
+            let momentX = 0, momentY = 0, momentZ = 0;
+
+            let maxDensityDetected = 0.001;
+            let minDensityDetected = 999999;
+
+            // Integración Cuadratura / Trapecio 3D Adaptativo
+            for (let i = 0; i < steps; i++) {
+                const x = xMin + (i + 0.5) * dx;
+                let yMinVal = 0, yMaxVal = 0;
+                try { yMinVal = fYMin.evaluate({x}); yMaxVal = fYMax.evaluate({x}); } catch(e) { continue; }
+
+                if (yMaxVal <= yMinVal) continue;
+                const dy = (yMaxVal - yMinVal) / steps;
+
+                for (let j = 0; j < steps; j++) {
+                    const y = yMinVal + (j + 0.5) * dy;
+                    let zS = 0, zI = 0;
+                    try { zS = fSup.evaluate({x, y}); zI = fInf.evaluate({x, y}); } catch(e) { continue; }
+
+                    const height = Math.max(0, zS - zI);
+                    if (height > 0) {
+                        const dz = height / steps;
+                        for (let k = 0; k < steps; k++) {
+                            const z = zI + (k + 0.5) * dz;
+                            const dV = dx * dy * dz;
+                            let rho = 1;
+                            try { rho = fDensity.evaluate({x, y, z}); } catch(e) {}
+
+                            maxDensityDetected = Math.max(maxDensityDetected, rho);
+                            minDensityDetected = Math.min(minDensityDetected, rho);
+
+                            const cellMass = rho * dV;
+                            volume += dV;
+                            mass += cellMass;
+                            momentX += x * cellMass;
+                            momentY += y * cellMass;
+                            momentZ += z * cellMass;
+                        }
+                    }
+                }
+            }
+
+            const cx = mass !== 0 ? momentX / mass : 0;
+            const cy = mass !== 0 ? momentY / mass : 0;
+            const cz = mass !== 0 ? momentZ / mass : 0;
+
+            document.getElementById('resVol').innerText = volume.toFixed(4);
+            document.getElementById('resMass').innerText = mass.toFixed(4);
+            document.getElementById('resCoM').innerText = `(${cx.toFixed(2)}, ${cy.toFixed(2)}, ${cz.toFixed(2)})`;
+
+            // PLANTEAR KATEX EDUCATIVO
+            const fullLatex = `\\iiint_E (${rhoExpr}) \\, dz \\, dy \\, dx = \\int_{${xMin}}^{${xMax}} \\int_{${yMinExpr}}^{${yMaxExpr}} \\int_{${zInfExpr}}^{${zSupExpr}} (${rhoExpr}) \\, dz \\, dy \\, dx`;
+            katex.render(fullLatex, document.getElementById('katexFormula'), { throwOnError: false });
+            document.getElementById('procedimientoTexto').innerText = `1. Integración interna respecto a Z desde z_inf = ${zInfExpr} hasta z_sup = ${zSupExpr}.\n2. Segunda integración en Y considerando el límite variable ${yMaxExpr}.\n3. Integración externa en X en el intervalo [${xMin}, ${xMax}].`;
+
+            // CREACIÓN DE GEOMETRÍA CON MAPA DE CALOR DE DENSIDAD EN VÉRTICES
+            const subSteps = 25;
+            const geo = new THREE.BufferGeometry();
+            const verts = [];
+            const colors = [];
+            const inds = [];
+
+            for (let i = 0; i <= subSteps; i++) {
+                const x = xMin + (i / subSteps) * (xMax - xMin);
+                let yMinV = 0, yMaxV = 0;
+                try { yMinV = fYMin.evaluate({x}); yMaxV = fYMax.evaluate({x}); } catch(e){}
+
+                for (let j = 0; j <= subSteps; j++) {
+                    const y = yMinV + (j / subSteps) * (yMaxV - yMinV);
+                    let z = 0;
+                    try { z = fSup.evaluate({x, y}); } catch(e){}
+
+                    verts.push(x, y, z);
+
+                    let rho = 1;
+                    try { rho = fDensity.evaluate({x, y, z}); } catch(e){}
+                    let t = (rho - minDensityDetected) / (maxDensityDetected - minDensityDetected || 1);
+                    
+                    // Colores tipo Jet/Viridis: Azul (poca densidad) -> Rojo/Magenta (alta densidad)
+                    const color = new THREE.Color();
+                    color.setHSL((1 - t) * 0.5, 1.0, 0.5);
+                    colors.push(color.r, color.g, color.b);
+                }
+            }
+
+            for (let i = 0; i < subSteps; i++) {
+                for (let j = 0; j < subSteps; j++) {
+                    const a = i * (subSteps + 1) + j;
+                    const b = a + 1;
+                    const c = (i + 1) * (subSteps + 1) + j;
+                    const d = c + 1;
+                    inds.push(a, b, d);
+                    inds.push(a, d, c);
+                }
+            }
+
+            geo.setIndex(inds);
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            geo.computeVertexNormals();
+
+            const mat = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                side: THREE.DoubleSide,
+                roughness: 0.3,
+                transparent: true,
+                opacity: 0.88
+            });
+
+            solidMeshGroup.add(new THREE.Mesh(geo, mat));
+            scene.add(solidMeshGroup);
+
+            // MARCADOR VISUAL DE CENTRO DE MASA Y VECTOR POSITION
+            const sphereGeo = new THREE.SphereGeometry(0.15, 32, 32);
+            const sphereMat = new THREE.MeshBasicMaterial({ color: 0xff0055 });
+            comMarker = new THREE.Mesh(sphereGeo, sphereMat);
+            comMarker.position.set(cx, cy, cz);
+            scene.add(comMarker);
+
+            const dirVector = new THREE.Vector3(cx, cy, cz);
+            const originVector = new THREE.Vector3(0, 0, 0);
+            comArrow = new THREE.ArrowHelper(dirVector.clone().normalize(), originVector, dirVector.length(), 0xff0055, 0.2, 0.1);
+            scene.add(comArrow);
+        }
+
+        // EXPORTACIÓN A REPORTES PDF
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(16);
+            doc.text("Reporte de Calculadora 3D GeoGebra", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()} | Universidad de La Guajira`, 14, 27);
+
+            doc.text(`Volumen (V): ${document.getElementById('resVol').innerText} u³`, 14, 40);
+            doc.text(`Masa Total (M): ${document.getElementById('resMass').innerText} u.m.`, 14, 48);
+            doc.text(`Centro de Masa (x̄, ȳ, z̄): ${document.getElementById('resCoM').innerText}`, 14, 56);
+
+            const canvas = renderer.domElement;
+            const imgData = canvas.toDataURL('image/png');
+            doc.addImage(imgData, 'PNG', 14, 70, 180, 110);
+
+            doc.save("Reporte_Calculo_Vectorial_3D.pdf");
+        }
+
+        function documentHelpers() {
+            document.querySelectorAll('.math-input').forEach(input => {
+                input.addEventListener('focus', () => { activeInput = input; showKeyboard(); });
+            });
+        }
+
+        function toggleKeyboard() { document.getElementById('virtual-keyboard').classList.toggle('hidden'); }
+        function showKeyboard() { document.getElementById('virtual-keyboard').classList.remove('hidden'); }
+        function switchTab(tab) {
+            document.getElementById('keyboard-num-panel').classList.add('hidden');
+            document.getElementById('keyboard-fx-panel').classList.add('hidden');
+            document.getElementById('keyboard-geo-panel').classList.add('hidden');
+            document.getElementById(`keyboard-${tab}-panel`).classList.remove('hidden');
+        }
+        function insertSymbol(sym) {
+            if (!activeInput) return;
+            const start = activeInput.selectionStart;
+            activeInput.value = activeInput.value.substring(0, start) + sym + activeInput.value.substring(activeInput.selectionEnd);
+            activeInput.focus();
+            actualizarKaTeX();
+        }
+        function deleteChar() {
+            if (!activeInput || activeInput.value.length === 0) return;
+            activeInput.value = activeInput.value.slice(0, -1);
+            actualizarKaTeX();
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.onload = () => { init(); documentHelpers(); };
+    </script>
+</body>
+</html>
