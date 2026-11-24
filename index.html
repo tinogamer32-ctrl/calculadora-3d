@@ -14,145 +14,276 @@
 
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #ffffff; color: #0f172a; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; width: 100vw; }
-        .sidebar { width: 410px; height: 100vh; background: #0f172a; color: #f8fafc; border-right: 2px solid #0284c7; display: flex; flex-direction: column; z-index: 30; flex-shrink: 0; }
-        .main-workspace { flex: 1; height: 100vh; position: relative; display: flex; flex-direction: column; background: #ffffff; overflow: hidden; }
-        #canvas-wrapper { position: relative; flex: 1; width: 100%; height: 100%; background: #ffffff !important; overflow: hidden; }
-        #canvas-wrapper canvas { display: block; width: 100% !important; height: 100% !important; background: #ffffff !important; }
-        #steps-panel { position: absolute; inset: 0; background: #f8fafc; z-index: 20; overflow-y: auto; padding: 2rem 2.5rem; display: none; }
-        .input-dark { background: #1e293b; border: 1px solid #334155; color: #ffffff; }
-        .input-dark:focus { outline: none; border-color: #38bdf8; }
-        .step-card { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #0284c7; border-radius: 0.6rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04); }
-        .math-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 0.4rem; padding: 0.75rem 1rem; margin: 0.65rem 0; overflow-x: auto; text-align: center; }
-        .term-item { background: #f8fafc; border-left: 3px solid #38bdf8; padding: 0.6rem 0.9rem; margin: 0.5rem 0; border-radius: 0 0.35rem 0.35rem 0; }
-        .key-btn { background: #1e293b; border: 1px solid #334155; color: #f8fafc; font-family: monospace; font-weight: 600; border-radius: 0.375rem; padding: 0.45rem; cursor: pointer; }
-        .key-btn:hover { background: #334155; border-color: #38bdf8; }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #ffffff;
+            color: #0f172a;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+        .sidebar {
+            width: 390px;
+            height: 100vh;
+            background: #0f172a;
+            color: #f8fafc;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            z-index: 30;
+            flex-shrink: 0;
+        }
+        .main-workspace {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            overflow: hidden;
+        }
+        #canvas-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            background: #ffffff !important;
+            overflow: hidden;
+        }
+        #canvas-wrapper canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            background: #ffffff !important;
+        }
+        .overlay-panel {
+            position: absolute;
+            inset: 0;
+            background: #f8fafc;
+            z-index: 20;
+            overflow-y: auto;
+            padding: 2rem 2.5rem;
+            display: none;
+        }
+        .input-dark {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #ffffff;
+        }
+        .input-dark:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+        .step-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid #0284c7;
+            border-radius: 0.65rem;
+            padding: 1.5rem;
+            margin-bottom: 1.35rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+        }
+        .math-box {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.45rem;
+            padding: 0.85rem 1.1rem;
+            margin: 0.65rem 0;
+            overflow-x: auto;
+            text-align: center;
+        }
+        .note-box {
+            background: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 0.45rem;
+            padding: 0.75rem 1rem;
+            margin-top: 0.65rem;
+            font-size: 0.8rem;
+            color: #334155;
+            line-height: 1.55;
+        }
+        .key-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            font-family: monospace;
+            font-weight: 600;
+            border-radius: 0.375rem;
+            padding: 0.45rem;
+            cursor: pointer;
+        }
+        .key-btn:hover {
+            background: #334155;
+            border-color: #38bdf8;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.05); }
+        ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 3px; }
     </style>
 </head>
 <body>
 
     <!-- PANEL IZQUIERDO -->
-    <aside class="sidebar p-4 overflow-y-auto shadow-xl">
-        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
-            <div>
-                <div class="flex items-center gap-2">
-                    <span class="bg-sky-500/20 text-sky-400 px-2 py-1 rounded-lg font-bold">∬</span>
-                    <h1 class="text-base font-bold text-white">VectorCalc <span class="text-sky-400">Studio</span></h1>
+    <aside class="sidebar p-4 overflow-y-auto shadow-xl justify-between">
+        <div>
+            <!-- HEADER -->
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-blue-600/25 border border-blue-500/40 text-sky-400 px-2.5 py-1.5 rounded-lg font-bold text-base">∬</div>
+                    <div>
+                        <h1 class="text-sm font-bold text-white leading-tight">VectorCalc Studio</h1>
+                        <p class="text-[11px] text-slate-400">Cálculo Vectorial &amp; Simulación 3D</p>
+                    </div>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-0.5">Cálculo Vectorial & Simulación 3D</p>
+                <div class="flex gap-1.5">
+                    <button onclick="limpiarTodo()" title="Reiniciar valores" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded text-xs cursor-pointer">✓</button>
+                    <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded text-xs font-semibold cursor-pointer flex items-center gap-1">📄 PDF</button>
+                </div>
             </div>
-            <div class="flex gap-1.5">
-                <button onclick="limpiarTodo()" title="Limpiar" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded text-xs cursor-pointer">🧹</button>
-                <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded text-xs font-semibold cursor-pointer">📄 PDF</button>
+
+            <!-- CARGAR EJERCICIO RÁPIDO -->
+            <div class="mb-3 bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                <label class="block text-[10px] font-bold tracking-wider text-amber-400 uppercase mb-1.5">⚡ CARGAR EJERCICIO RÁPIDO:</label>
+                <select id="presetSelect" onchange="cargarPlantilla()" class="w-full text-xs px-2.5 py-2 rounded input-dark cursor-pointer font-medium">
+                    <option value="sensor" selected>1. Sensor Térmico: Masa (σ = x² + xy + 1)</option>
+                    <option value="pcb">2. Placa Circuito PCB: Centro Masa (ρ = y)</option>
+                    <option value="lamina">3. Lámina Rectangular: CoM (ρ = 2)</option>
+                    <option value="solido">4. Sólido Paraboloide: Volumen (z = 4 - x² - y)</option>
+                    <option value="curvas">5. Región Tipo I (Curvas): y ∈ [x^2, 2*x]</option>
+                </select>
             </div>
-        </div>
 
-        <!-- EJERCICIOS RÁPIDOS -->
-        <div class="mb-3 bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-            <label class="block text-[11px] font-semibold text-sky-400 uppercase mb-1.5">⚡ Cargar Ejercicio Rápido:</label>
-            <select id="presetSelect" onchange="cargarPlantilla()" class="w-full text-xs px-2.5 py-2 rounded input-dark cursor-pointer font-medium">
-                <option value="sensor" selected>1. Sensor Térmico: Masa (σ = x² + xy + 1)</option>
-                <option value="pcb">2. Placa Circuito PCB: CoM (ρ = y)</option>
-                <option value="lamina">3. Lámina Uniforme: CoM (ρ = 2)</option>
-                <option value="solido">4. Sólido 3D: Volumen (z = 4 - x² - y)</option>
-            </select>
-        </div>
-
-        <!-- ENTRADAS -->
-        <div class="space-y-3 text-xs flex-1">
-            <div class="grid grid-cols-2 gap-2">
+            <!-- ORDEN DE INTEGRACIÓN Y MAGNITUD -->
+            <div class="grid grid-cols-2 gap-2.5 mb-3 text-xs">
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-300 mb-1">Orden de Integración:</label>
-                    <select id="orderSelect" onchange="actualizarVistaPrevia()" class="w-full px-2 py-1.5 rounded input-dark font-semibold text-amber-400">
+                    <select id="orderSelect" onchange="actualizarVistaPrevia()" class="w-full px-2.5 py-2 rounded input-dark font-semibold text-amber-300 cursor-pointer">
                         <option value="dydx" selected>dy dx (Interna Y)</option>
                         <option value="dxdy">dx dy (Interna X)</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-300 mb-1">Magnitud a Hallar:</label>
-                    <select id="calcMode" onchange="actualizarVistaPrevia()" class="w-full px-2 py-1.5 rounded input-dark font-semibold text-emerald-400">
-                        <option value="M" selected>Masa Total (M)</option>
-                        <option value="V">Volumen (V)</option>
-                        <option value="CoM">Centro de Masa (x̄, ȳ)</option>
+                    <select id="calcMode" onchange="actualizarVistaPrevia()" class="w-full px-2.5 py-2 rounded input-dark font-semibold text-emerald-300 cursor-pointer">
+                        <option value="V" selected>Volumen (V)</option>
+                        <option value="M">Masa (M)</option>
+                        <option value="CoM">Centro de Masa</option>
                     </select>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 bg-slate-900 p-2.5 rounded border border-slate-800">
-                <div>
-                    <label class="block text-[11px] font-semibold text-rose-400 mb-1">Límites en X:</label>
-                    <div class="flex items-center gap-1">
-                        <input type="text" id="xMin" value="0" oninput="actualizarVistaPrevia()" class="math-input w-full px-1.5 py-1 rounded input-dark font-mono text-center">
+            <!-- LÍMITES EN X Y EN Y -->
+            <div class="grid grid-cols-2 gap-2.5 mb-3 text-xs">
+                <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                    <label class="block text-[11px] font-semibold text-rose-400 mb-1.5">Límites en X:</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="text" id="xMin" value="0" onfocus="activeInput=this" oninput="actualizarVistaPrevia()" class="w-full px-2 py-1.5 rounded input-dark font-mono text-center">
                         <span class="text-slate-500">a</span>
-                        <input type="text" id="xMax" value="2" oninput="actualizarVistaPrevia()" class="math-input w-full px-1.5 py-1 rounded input-dark font-mono text-center">
+                        <input type="text" id="xMax" value="2" onfocus="activeInput=this" oninput="actualizarVistaPrevia()" class="w-full px-2 py-1.5 rounded input-dark font-mono text-center">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-[11px] font-semibold text-emerald-400 mb-1">Límites en Y:</label>
-                    <div class="flex items-center gap-1">
-                        <input type="text" id="yMin" value="0" oninput="actualizarVistaPrevia()" class="math-input w-full px-1.5 py-1 rounded input-dark font-mono text-center">
+                <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
+                    <label class="block text-[11px] font-semibold text-emerald-400 mb-1.5">Límites en Y:</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="text" id="yMin" value="0" onfocus="activeInput=this" oninput="actualizarVistaPrevia()" class="w-full px-2 py-1.5 rounded input-dark font-mono text-center">
                         <span class="text-slate-500">a</span>
-                        <input type="text" id="yMax" value="3" oninput="actualizarVistaPrevia()" class="math-input w-full px-1.5 py-1 rounded input-dark font-mono text-center">
+                        <input type="text" id="yMax" value="3" onfocus="activeInput=this" oninput="actualizarVistaPrevia()" class="w-full px-2 py-1.5 rounded input-dark font-mono text-center">
                     </div>
                 </div>
             </div>
 
-            <div>
+            <!-- FUNCIÓN / DENSIDAD -->
+            <div class="mb-3 text-xs">
                 <div class="flex justify-between items-center mb-1">
                     <label class="font-semibold text-slate-200">Función / Densidad σ(x,y):</label>
-                    <button onclick="toggleKeyboard()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-sky-400 px-2 py-0.5 rounded border border-slate-700 cursor-pointer">⌨️ Teclado</button>
+                    <button onclick="toggleKeyboard()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded border border-slate-700 cursor-pointer">⌨ Teclado</button>
                 </div>
-                <input type="text" id="funcInput" value="x^2 + x*y + 1" oninput="actualizarVistaPrevia()" class="math-input w-full px-3 py-2 rounded input-dark font-mono text-sm font-semibold text-sky-300">
+                <input type="text" id="funcInput" value="x^2 + x*y + 1" onfocus="activeInput=this" oninput="actualizarVistaPrevia()" class="w-full px-3 py-2 rounded input-dark font-mono text-xs font-semibold text-sky-300">
             </div>
 
-            <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-center">
-                <span class="text-[10px] text-slate-400 uppercase block mb-1">Integral Planteada:</span>
-                <div id="latexPreview" class="text-white text-sm min-h-[34px] flex items-center justify-center"></div>
+            <!-- INTEGRAL PLANTEADA -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-center mb-3">
+                <span class="text-[9px] tracking-widest text-slate-400 uppercase block mb-1">INTEGRAL PLANTEADA:</span>
+                <div id="latexPreview" class="text-white text-sm min-h-[32px] flex items-center justify-center"></div>
             </div>
 
-            <button onclick="resolverTodo()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-lg shadow text-sm cursor-pointer transition">
+            <!-- BOTÓN PRINCIPAL -->
+            <button onclick="resolverTodo()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-lg shadow text-xs cursor-pointer transition mb-3">
                 🚀 Resolver Paso a Paso y Graficar
             </button>
+
+            <!-- PANEL DE SIMULACIÓN 3D -->
+            <div class="bg-slate-900/95 p-2.5 rounded-lg border border-sky-500/40 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold tracking-wider text-sky-400 uppercase">🎬 Simulación 3D Interactiva:</span>
+                    <button onclick="resetSimulacion()" class="text-[10px] text-slate-400 hover:text-white underline cursor-pointer">Reiniciar</button>
+                </div>
+                <div class="flex gap-1.5">
+                    <select id="simMode" onchange="cambiarModoSimulacion()" class="flex-1 px-2 py-1.5 rounded input-dark text-[11px] font-semibold text-amber-300 cursor-pointer">
+                        <option value="riemann" selected>Sumas de Riemann (Prismas)</option>
+                        <option value="slice">Corte Transversal Barrido A(x)</option>
+                        <option value="heat">Flujo Térmico / Partículas</option>
+                        <option value="equilibrium">Equilibrio Centro de Masa</option>
+                    </select>
+                    <button id="btnSimPlay" onclick="toggleSimulacion()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded text-[11px] cursor-pointer transition shrink-0">
+                        ▶ Simular
+                    </button>
+                </div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div id="simProgressBar" class="bg-emerald-400 h-full w-full transition-all duration-75"></div>
+                </div>
+                <div id="simStatusText" class="text-[10px] font-mono text-slate-300 truncate">
+                    Listo — Presiona "▶ Simular" para animar el sólido
+                </div>
+            </div>
         </div>
 
-        <!-- RESULTADOS -->
-        <div class="mt-3 pt-3 border-t border-slate-800 grid grid-cols-3 gap-1.5 text-center">
+        <!-- RESULTADOS INFERIORES -->
+        <div class="mt-3 pt-2.5 border-t border-slate-800 grid grid-cols-3 gap-2 text-center">
             <div class="bg-slate-900 p-2 rounded border border-slate-800">
                 <span class="text-[10px] text-slate-400 block">Volumen (V)</span>
-                <span id="outVol" class="font-mono text-sky-400 font-bold text-xs">--</span>
+                <span id="outVol" class="font-mono text-sky-400 font-bold text-xs">27.0000</span>
             </div>
             <div class="bg-slate-900 p-2 rounded border border-slate-800">
                 <span class="text-[10px] text-slate-400 block">Masa (M)</span>
-                <span id="outMass" class="font-mono text-emerald-400 font-bold text-xs">--</span>
+                <span id="outMass" class="font-mono text-emerald-400 font-bold text-xs">27.0000</span>
             </div>
             <div class="bg-slate-900 p-2 rounded border border-slate-800">
                 <span class="text-[10px] text-slate-400 block">Centro (x̄, ȳ)</span>
-                <span id="outCoM" class="font-mono text-amber-400 font-bold text-xs">--</span>
+                <span id="outCoM" class="font-mono text-amber-400 font-bold text-xs">(1.30, 1.70)</span>
             </div>
         </div>
     </aside>
 
     <!-- ÁREA PRINCIPAL DERECHA -->
     <main class="main-workspace">
-        <header class="h-12 bg-slate-100 border-b border-slate-200 px-4 flex items-center justify-between z-20 shrink-0">
+        <header class="h-11 bg-slate-50 border-b border-slate-200 px-4 flex items-center justify-between z-20 shrink-0">
             <div class="flex gap-2">
-                <button id="btnTab3D" onclick="cambiarPestana('3d')" class="px-4 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white cursor-pointer">
-                    🧊 Vista Gráfica 3D (GeoGebra)
+                <button id="btnTab3D" onclick="cambiarPestana('3d')" class="px-3.5 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white cursor-pointer">
+                    Vista Gráfica 3D (GeoGebra)
                 </button>
-                <button id="btnTabSteps" onclick="cambiarPestana('steps')" class="px-4 py-1.5 rounded-md text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 cursor-pointer">
-                    📝 Solución Analítica Paso a Paso
+                <button id="btnTabSteps" onclick="cambiarPestana('steps')" class="px-3.5 py-1.5 rounded-md text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 cursor-pointer">
+                    Solución Analítica Paso a Paso
                 </button>
             </div>
 
             <div id="cameraControls" class="flex items-center gap-1.5">
-                <button onclick="setCamara('iso')" class="bg-white hover:bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer">Isométrica</button>
-                <button onclick="setCamara('xy')" class="bg-white hover:bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer">Superior (XY)</button>
+                <button onclick="setCamara('iso')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer">Isométrica</button>
+                <button onclick="setCamara('xy')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer">Superior (XY)</button>
                 <button onclick="toggleMalla()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded text-xs font-semibold cursor-pointer">Ejes On/Off</button>
             </div>
         </header>
 
         <!-- VISOR 3D -->
         <div id="canvas-wrapper">
+            <div id="simHudBanner" class="hidden absolute top-3 left-4 bg-slate-900/90 text-white px-3.5 py-2 rounded-lg shadow-lg text-xs z-10 border border-slate-700 flex items-center gap-2">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span id="simHudText" class="font-mono">Simulando...</span>
+            </div>
+
             <div class="absolute bottom-4 left-4 bg-white/95 border border-slate-300 p-2.5 rounded-lg shadow text-[11px] text-slate-700 z-10 pointer-events-none space-y-1">
                 <div class="font-bold text-slate-900 border-b border-slate-200 pb-1 mb-1">Referencias Espaciales</div>
                 <div class="flex items-center gap-2"><span class="w-3 h-0.5 bg-red-600 inline-block"></span> Eje X (Rojo)</div>
@@ -163,22 +294,22 @@
         </div>
 
         <!-- PANEL PASO A PASO -->
-        <div id="steps-panel">
+        <div id="steps-panel" class="overlay-panel">
             <div class="max-w-4xl mx-auto">
                 <div class="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-6">
                     <div>
-                        <h2 class="text-2xl font-extrabold text-slate-900">Desarrollo Matemático Paso a Paso</h2>
-                        <p class="text-sm text-slate-500">Integración iterada término a término con evaluación de límites</p>
+                        <h2 class="text-xl font-extrabold text-slate-900">Solución Analítica Paso a Paso</h2>
+                        <p class="text-xs text-slate-500">Explicación completa de cada etapa: planteamiento, integración interna, simplificación, integral externa y centro de masa</p>
                     </div>
-                    <button onclick="cambiarPestana('3d')" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">Volver a Gráfica 3D</button>
+                    <button onclick="cambiarPestana('3d')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">Volver a Vista Gráfica 3D</button>
                 </div>
                 <div id="stepsContent"></div>
             </div>
         </div>
     </main>
 
-    <!-- TECLADO -->
-    <div id="virtual-keyboard" class="fixed bottom-4 left-[425px] w-[380px] bg-slate-900 text-white rounded-xl shadow-2xl p-3 z-50 border border-slate-700 hidden">
+    <!-- TECLADO MATEMÁTICO FLOTANTE -->
+    <div id="virtual-keyboard" class="fixed bottom-4 left-[405px] w-[360px] bg-slate-900 text-white rounded-xl shadow-2xl p-3 z-50 border border-slate-700 hidden">
         <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-800">
             <span class="text-xs font-bold text-sky-400">Teclado Matemático</span>
             <button onclick="toggleKeyboard()" class="text-slate-400 hover:text-white text-xs px-2 py-0.5 rounded bg-slate-800 cursor-pointer">✕</button>
@@ -189,627 +320,869 @@
             <button class="key-btn" onclick="insertSym('^2')">x²</button>
             <button class="key-btn" onclick="insertSym('^3')">x³</button>
             <button class="key-btn" onclick="insertSym('sqrt(')">√</button>
+            <button class="key-btn text-amber-300" onclick="insertSym('sin(')">sin</button>
+            <button class="key-btn text-amber-300" onclick="insertSym('cos(')">cos</button>
+            <button class="key-btn text-amber-300" onclick="insertSym('exp(')">eˣ</button>
+            <button class="key-btn text-amber-300" onclick="insertSym('pi')">π</button>
+            <button class="key-btn" onclick="insertSym('/')">÷</button>
             <button class="key-btn" onclick="insertSym('7')">7</button>
             <button class="key-btn" onclick="insertSym('8')">8</button>
             <button class="key-btn" onclick="insertSym('9')">9</button>
             <button class="key-btn" onclick="insertSym('*')">×</button>
-            <button class="key-btn" onclick="insertSym('/')">÷</button>
+            <button class="key-btn" onclick="insertSym('-')">-</button>
             <button class="key-btn" onclick="insertSym('4')">4</button>
             <button class="key-btn" onclick="insertSym('5')">5</button>
             <button class="key-btn" onclick="insertSym('6')">6</button>
             <button class="key-btn" onclick="insertSym('+')">+</button>
-            <button class="key-btn" onclick="insertSym('-')">-</button>
+            <button class="key-btn" onclick="insertSym('(')">(</button>
             <button class="key-btn" onclick="insertSym('1')">1</button>
             <button class="key-btn" onclick="insertSym('2')">2</button>
             <button class="key-btn" onclick="insertSym('3')">3</button>
-            <button class="key-btn" onclick="insertSym('(')">(</button>
+            <button class="key-btn" onclick="insertSym('0')">0</button>
             <button class="key-btn" onclick="insertSym(')')">)</button>
-            <button class="key-btn col-span-2" onclick="insertSym('0')">0</button>
-            <button class="key-btn" onclick="insertSym('.')">.</button>
+            <button class="key-btn col-span-2" onclick="insertSym('.')">.</button>
             <button class="key-btn bg-rose-900/80" onclick="delChar()">⌫</button>
-            <button class="key-btn bg-sky-600" onclick="resolverTodo()">=</button>
+            <button class="key-btn col-span-2 bg-blue-600" onclick="resolverTodo()">= Calcular</button>
         </div>
     </div>
 
     <script>
         let scene, camera, renderer, controls;
-        let solidGroup = null, axesGroup = null, comMarker = null;
+        let solidGroup = null, axesGroup = null, comMarker = null, simGroup = null;
         let activeInput = document.getElementById('funcInput');
+        let lastResults = {};
+
+        let simRunning = false;
+        let simProgress = 1.0;
+        let simClock = 0;
 
         function normalizar(expr) {
             if (!expr || expr.trim() === "") return "0";
             return expr.toString()
+                .replace(/π/g, 'pi')
                 .replace(/\s+/g, '')
                 .replace(/([0-9])([a-zA-Z\(])/g, '$1*$2')
-                .replace(/([xyz])([xyz])/g, '$1*$2')
-                .replace(/([xyz])([xyz])/g, '$1*$2')
+                .replace(/([xy])([xy])/g, '$1*$2')
+                .replace(/([xy])([xy])/g, '$1*$2')
                 .replace(/\)\(/g, ')*(');
         }
 
-        // Utilidad para convertir decimales a fracciones LaTeX limpias
-        function toFracTex(num) {
+        function gcd(a, b) {
+            a = Math.abs(Math.round(a));
+            b = Math.abs(Math.round(b));
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        function toExactTex(num) {
+            if (!isFinite(num)) return "\\text{Indefinido}";
+            if (Math.abs(num) < 1e-9) return "0";
             if (Math.abs(num - Math.round(num)) < 1e-6) return Math.round(num).toString();
             const sign = num < 0 ? "-" : "";
             const abs = Math.abs(num);
-            for (let d = 2; d <= 36; d++) {
+            for (let d = 2; d <= 60; d++) {
                 if (Math.abs(abs * d - Math.round(abs * d)) < 1e-5) {
-                    return `${sign}\\frac{${Math.round(abs * d)}}{${d}}`;
+                    const n = Math.round(abs * d), g = gcd(n, d);
+                    return d / g === 1 ? `${sign}${n / g}` : `${sign}\\frac{${n / g}}{${d / g}}`;
                 }
             }
             return num.toFixed(4);
         }
 
-        // Parser simbólico polinómico para desglose término a término (c * x^a * y^b)
-        function parsePolynomial(exprStr) {
-            try {
-                const expanded = math.simplify(normalizar(exprStr)).toString();
-                // Separar términos por + o - fuera de paréntesis
-                const rawTerms = expanded.replace(/-/g, '+-').split('+').map(t => t.trim()).filter(t => t.length > 0);
-                const terms = [];
+        function exprToTex(exprStr) {
+            try { return math.parse(normalizar(exprStr)).toTex(); } catch (e) { return exprStr; }
+        }
 
-                for (let t of rawTerms) {
-                    let coef = 1, px = 0, py = 0;
-                    // Extraer coeficiente numérico
-                    const coefMatch = t.match(/^([+-]?\d*\.?\d+)/);
-                    if (coefMatch && !t.startsWith('x') && !t.startsWith('y') && !t.startsWith('-x') && !t.startsWith('-y')) {
-                        coef = parseFloat(coefMatch[1]);
-                    } else if (t.startsWith('-x') || t.startsWith('-y')) {
-                        coef = -1;
-                    }
-                    // Extraer potencia de x
-                    const xMatch = t.match(/x(?:\^(\d+))?/);
-                    if (xMatch) px = xMatch[1] ? parseInt(xMatch[1]) : 1;
-                    // Extraer potencia de y
-                    const yMatch = t.match(/y(?:\^(\d+))?/);
-                    if (yMatch) py = yMatch[1] ? parseInt(yMatch[1]) : 1;
+        const GL_NODES = [-0.9602898565, -0.7966664774, -0.5255324099, -0.1834346425, 0.1834346425, 0.5255324099, 0.7966664774, 0.9602898565];
+        const GL_WEIGHTS = [0.1012285363, 0.2223810345, 0.3137066459, 0.3626837834, 0.3626837834, 0.3137066459, 0.2223810345, 0.1012285363];
 
-                    terms.push({ coef, px, py });
+        function integrate1D(fn, a, b, subdivisions = 8) {
+            if (Math.abs(b - a) < 1e-12) return 0;
+            const h = (b - a) / subdivisions;
+            let total = 0;
+            for (let s = 0; s < subdivisions; s++) {
+                const subA = a + s * h, subB = subA + h;
+                const mid = 0.5 * (subA + subB), half = 0.5 * (subB - subA);
+                let sum = 0;
+                for (let i = 0; i < 8; i++) {
+                    const val = fn(mid + half * GL_NODES[i]);
+                    if (isFinite(val)) sum += GL_WEIGHTS[i] * val;
                 }
-                return terms;
-            } catch (e) {
-                return null;
+                total += sum * half;
             }
+            return total;
         }
 
-        // Formatear un monomio c * x^px * y^py en LaTeX limpio
-        function formatMonomialTex(coef, px, py, showPlus = false) {
-            if (Math.abs(coef) < 1e-8) return "";
-            const sign = coef < 0 ? " - " : (showPlus ? " + " : "");
-            const absC = Math.abs(coef);
-            const hasVars = px > 0 || py > 0;
-            let cTex = "";
-            if (!hasVars || Math.abs(absC - 1) > 1e-6) {
-                cTex = toFracTex(absC);
+        function integrarDoble(compiledFn, xMinStr, xMaxStr, yMinStr, yMaxStr, order, weightFn = null, subs = 8) {
+            const cXMin = math.compile(normalizar(xMinStr));
+            const cXMax = math.compile(normalizar(xMaxStr));
+            const cYMin = math.compile(normalizar(yMinStr));
+            const cYMax = math.compile(normalizar(yMaxStr));
+
+            const evalPoint = (x, y) => {
+                const fVal = compiledFn.evaluate({ x, y });
+                if (!isFinite(fVal) || isNaN(fVal)) return 0;
+                const w = weightFn ? weightFn(x, y) : 1;
+                return fVal * w;
+            };
+
+            if (order === 'dydx') {
+                const a = cXMin.evaluate({}), b = cXMax.evaluate({});
+                return integrate1D((xVal) => {
+                    const y1 = cYMin.evaluate({ x: xVal });
+                    const y2 = cYMax.evaluate({ x: xVal });
+                    return integrate1D((yVal) => evalPoint(xVal, yVal), y1, y2, subs);
+                }, a, b, subs);
+            } else {
+                const c = cYMin.evaluate({}), d = cYMax.evaluate({});
+                return integrate1D((yVal) => {
+                    const x1 = cXMin.evaluate({ y: yVal });
+                    const x2 = cXMax.evaluate({ y: yVal });
+                    return integrate1D((xVal) => evalPoint(xVal, yVal), x1, x2, subs);
+                }, c, d, subs);
             }
-            const xTex = px === 0 ? "" : (px === 1 ? "x" : `x^{${px}}`);
-            const yTex = py === 0 ? "" : (py === 1 ? "y" : `y^{${py}}`);
-            return `${sign}${cTex}${xTex}${yTex}`;
-        }
-
-        function formatPolyTex(terms) {
-            if (!terms || terms.length === 0) return "0";
-            let res = "";
-            terms.forEach((t, idx) => {
-                const piece = formatMonomialTex(t.coef, t.px, t.py, res.length > 0);
-                res += piece;
-            });
-            return res || "0";
-        }
-
-        // MOTOR DE RESOLUCIÓN PASO A PASO DETALLADO (IGUAL A TU EJEMPLO)
-        function generarPasoAPasoDetallado(fNorm, x0, x1, y0, y1, massVal, myVal, mxVal, cx, cy) {
-            const container = document.getElementById('stepsContent');
-            const magLabel = document.getElementById('calcMode').value === 'V' ? 'V' : 'M';
-            const unitLabel = magLabel === 'V' ? '\\text{unidades cúbicas}' : '\\text{unidades de masa}';
-            const terms = parsePolynomial(fNorm);
-
-            // Si es un polinomio estándar con límites numéricos, generamos el desglose pedagógico completo
-            if (terms && !isNaN(x0) && !isNaN(x1) && !isNaN(y0) && !isNaN(y1)) {
-                const fTex = formatPolyTex(terms);
-
-                // --- PASO 2: INTEGRAL INTERNA RESPECTO A Y ---
-                let step2TermsHTML = "";
-                const antiderivYTerms = [];
-                const evalYSupTerms = [];
-                const evalYInfTerms = [];
-
-                terms.forEach((t, idx) => {
-                    const origTex = formatMonomialTex(t.coef, t.px, t.py, false);
-                    const newPy = t.py + 1;
-                    const newCoef = t.coef / newPy;
-                    antiderivYTerms.push({ coef: newCoef, px: t.px, py: newPy });
-
-                    const antiTex = formatMonomialTex(newCoef, t.px, newPy, false);
-                    const constX = t.px > 0 ? (t.px === 1 ? "x" : `x^{${t.px}}`) : "";
-                    const constCoefTex = Math.abs(t.coef) !== 1 || t.px === 0 ? `${toFracTex(t.coef)}${constX}` : constX;
-
-                    let explicacion = "";
-                    if (t.py === 0 && t.px === 0) {
-                        explicacion = `Para el término constante $${origTex}$: $$\\int ${origTex} \\, dy = ${antiTex}$$`;
-                    } else if (t.py === 0) {
-                        explicacion = `Para el término $${origTex}$ (donde $${constX}$ actúa como constante): $$\\int ${origTex} \\, dy = ${antiTex}$$`;
-                    } else {
-                        const yPowRule = t.py === 1 ? `y^1 \\rightarrow \\frac{y^2}{2}` : `y^{${t.py}} \\rightarrow \\frac{y^{${newPy}}}{${newPy}}`;
-                        explicacion = `Para el término $${origTex}$: El factor $${constCoefTex}$ se queda y se integra $y^{${t.py}}$ usando la regla de la potencia ($${yPowRule}$): $$\\int ${origTex} \\, dy = ${constCoefTex} \\left(\\frac{y^{${newPy}}}{${newPy}}\\right) = ${antiTex}$$`;
-                    }
-                    step2TermsHTML += `<div class="term-item text-sm text-slate-700"><span class="font-bold text-sky-700">${idx + 1}.</span> ${explicacion}</div>`;
-
-                    // Evaluación en y1 y y0
-                    evalYSupTerms.push({ coef: newCoef * Math.pow(y1, newPy), px: t.px, py: 0 });
-                    evalYInfTerms.push({ coef: newCoef * Math.pow(y0, newPy), px: t.px, py: 0 });
-                });
-
-                const antiYTex = formatPolyTex(antiderivYTerms);
-
-                // Construir sustitución explícita en y = y1 y y = y0
-                const substY1Tex = antiderivYTerms.map((t, i) => {
-                    const s = t.coef < 0 ? " - " : (i > 0 ? " + " : "");
-                    const c = Math.abs(t.coef) !== 1 || t.px === 0 ? toFracTex(Math.abs(t.coef)) : "";
-                    const xPart = t.px === 0 ? "" : (t.px === 1 ? "x" : `x^{${t.px}}`);
-                    return `${s}${c}${xPart}(${y1})^{${t.py}}`;
-                }).join("");
-
-                const substY0Tex = antiderivYTerms.map((t, i) => {
-                    const s = t.coef < 0 ? " - " : (i > 0 ? " + " : "");
-                    const c = Math.abs(t.coef) !== 1 || t.px === 0 ? toFracTex(Math.abs(t.coef)) : "";
-                    const xPart = t.px === 0 ? "" : (t.px === 1 ? "x" : `x^{${t.px}}`);
-                    return `${s}${c}${xPart}(${y0})^{${t.py}}`;
-                }).join("");
-
-                // Agrupar términos semejantes en x después de evaluar y
-                const polyXMap = {};
-                evalYSupTerms.forEach((t, i) => {
-                    const net = t.coef - evalYInfTerms[i].coef;
-                    polyXMap[t.px] = (polyXMap[t.px] || 0) + net;
-                });
-                const polyXTerms = Object.keys(polyXMap).map(Number).sort((a, b) => b - a)
-                    .map(px => ({ coef: polyXMap[px], px, py: 0 }))
-                    .filter(t => Math.abs(t.coef) > 1e-8);
-
-                const resInternaTex = formatPolyTex(polyXTerms);
-                const valY0Total = evalYInfTerms.reduce((acc, t) => acc + t.coef, 0);
-
-                // --- PASO 3: INTEGRAL EXTERNA RESPECTO A X ---
-                let step3TermsHTML = "";
-                const antiderivXTerms = [];
-
-                polyXTerms.forEach((t, idx) => {
-                    const origTex = formatMonomialTex(t.coef, t.px, 0, false);
-                    const newPx = t.px + 1;
-                    const newCoef = t.coef / newPx;
-                    antiderivXTerms.push({ coef: newCoef, px: newPx, py: 0 });
-                    const antiTex = formatMonomialTex(newCoef, newPx, 0, false);
-
-                    let expX = "";
-                    if (t.px === 0) {
-                        expX = `Para el término constante $${origTex}$: $$\\int ${origTex} \\, dx = ${antiTex}$$`;
-                    } else {
-                        expX = `Para el término $${origTex}$: $$\\int ${origTex} \\, dx = ${toFracTex(t.coef)} \\left(\\frac{x^{${newPx}}}{${newPx}}\\right) = ${antiTex}$$`;
-                    }
-                    step3TermsHTML += `<div class="term-item text-sm text-slate-700"><span class="font-bold text-sky-700">${idx + 1}.</span> ${expX}</div>`;
-                });
-
-                const antiXTex = formatPolyTex(antiderivXTerms);
-
-                // --- PASO 4: EVALUACIÓN FINAL EN X = X1 Y X = X0 ---
-                const substX1Tex = antiderivXTerms.map((t, i) => {
-                    const s = t.coef < 0 ? " - " : (i > 0 ? " + " : "");
-                    const c = Math.abs(t.coef) !== 1 ? toFracTex(Math.abs(t.coef)) : "";
-                    return `${s}${c}(${x1})^{${t.px}}`;
-                }).join("");
-
-                const evalX1PartsTex = antiderivXTerms.map((t, i) => {
-                    const val = t.coef * Math.pow(x1, t.px);
-                    return toFracTex(val).startsWith("-") || i === 0 ? toFracTex(val) : ` + ${toFracTex(val)}`;
-                }).join("");
-
-                const substX0Tex = antiderivXTerms.map((t, i) => {
-                    const s = t.coef < 0 ? " - " : (i > 0 ? " + " : "");
-                    const c = Math.abs(t.coef) !== 1 ? toFracTex(Math.abs(t.coef)) : "";
-                    return `${s}${c}(${x0})^{${t.px}}`;
-                }).join("");
-
-                const fX1 = antiderivXTerms.reduce((acc, t) => acc + t.coef * Math.pow(x1, t.px), 0);
-                const fX0 = antiderivXTerms.reduce((acc, t) => acc + t.coef * Math.pow(x0, t.px), 0);
-                const finalVal = fX1 - fX0;
-                const finalTex = toFracTex(finalVal);
-
-                container.innerHTML = `
-                    <!-- PASO 1 -->
-                    <div class="step-card">
-                        <h3 class="text-base font-extrabold text-sky-800 mb-1">Paso 1: Planteamiento de la Integral Iterada</h3>
-                        <p class="text-sm text-slate-600">Sustituimos la función y los límites rectangulares en la integral doble:</p>
-                        <div class="math-box" id="k-p1"></div>
-                    </div>
-
-                    <!-- PASO 2 -->
-                    <div class="step-card">
-                        <h3 class="text-base font-extrabold text-sky-800 mb-1">Paso 2: Resolución de la Integral Interna (respecto a $y$)</h3>
-                        <p class="text-sm text-slate-600">Tomamos la integral interna y sus límites:</p>
-                        <div class="math-box" id="k-p2-init"></div>
-                        <p class="text-sm text-slate-600 mb-2">Durante este paso, la variable $x$ actúa como una constante. Integramos cada término con respecto a $y$:</p>
-                        ${step2TermsHTML}
-                        <p class="text-sm text-slate-600 mt-3">Juntamos la antiderivada parcial y la evaluamos entre los límites $y = ${y0}$ e $y = ${y1}$:</p>
-                        <div class="math-box" id="k-p2-bracket"></div>
-                        <ul class="list-disc pl-6 text-sm text-slate-700 space-y-1 mt-2">
-                            <li><strong>Evaluamos en el límite superior ($y = ${y1}$):</strong> <span id="k-p2-sup"></span></li>
-                            <li><strong>Evaluamos en el límite inferior ($y = ${y0}$):</strong> <span id="k-p2-inf"></span></li>
-                        </ul>
-                        <div class="mt-3 p-3 bg-sky-50 border border-sky-200 rounded-lg text-center">
-                            <span class="text-xs font-bold uppercase text-sky-800 block mb-1">Resultado de la integral interna:</span>
-                            <div id="k-p2-res"></div>
-                        </div>
-                    </div>
-
-                    <!-- PASO 3 -->
-                    <div class="step-card">
-                        <h3 class="text-base font-extrabold text-sky-800 mb-1">Paso 3: Planteamiento y Resolución de la Integral Externa (respecto a $x$)</h3>
-                        <p class="text-sm text-slate-600">Sustituimos el resultado anterior en la integral externa que quedó pendiente:</p>
-                        <div class="math-box" id="k-p3-init"></div>
-                        <p class="text-sm text-slate-600 mb-2">Integramos cada término con respecto a $x$ utilizando la regla de la potencia:</p>
-                        ${step3TermsHTML}
-                        <div class="mt-3 p-3 bg-sky-50 border border-sky-200 rounded-lg text-center">
-                            <span class="text-xs font-bold uppercase text-sky-800 block mb-1">Antiderivada completa $F(x)$:</span>
-                            <div id="k-p3-anti"></div>
-                        </div>
-                    </div>
-
-                    <!-- PASO 4 -->
-                    <div class="step-card">
-                        <h3 class="text-base font-extrabold text-sky-800 mb-1">Paso 4: Evaluación de los Límites de la Integral Externa</h3>
-                        <p class="text-sm text-slate-600 mb-2">Evaluamos la función $F(x)$ en el límite superior $x = ${x1}$ y el límite inferior $x = ${x0}$:</p>
-                        <div class="term-item text-sm text-slate-700">
-                            <span class="font-bold text-sky-700">1. Evaluación en $x = ${x1}$:</span>
-                            <div id="k-p4-sup" class="mt-1"></div>
-                        </div>
-                        <div class="term-item text-sm text-slate-700">
-                            <span class="font-bold text-sky-700">2. Evaluación en $x = ${x0}$:</span>
-                            <div id="k-p4-inf" class="mt-1"></div>
-                        </div>
-                        <div class="term-item text-sm text-slate-700">
-                            <span class="font-bold text-sky-700">3. Restamos límite superior menos inferior:</span>
-                            <div id="k-p4-sub" class="mt-1"></div>
-                        </div>
-
-                        <div class="mt-4 p-4 bg-emerald-50 border-2 border-emerald-400 rounded-xl text-center shadow-sm">
-                            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 block mb-1">Resultado Final</span>
-                            <div id="k-final" class="text-lg"></div>
-                        </div>
-                    </div>
-
-                    <!-- EXTRA: CENTRO DE MASA -->
-                    <div class="step-card border-l-amber-500">
-                        <h3 class="text-sm font-extrabold text-amber-800 mb-1">Complemento: Coordenadas del Centro de Masa $(\\bar{x}, \\bar{y})$</h3>
-                        <div class="math-box bg-amber-50/50 border-amber-200" id="k-com"></div>
-                    </div>
-                `;
-
-                // Renderizar todas las expresiones KaTeX
-                katex.render(`${magLabel} = \\int_{${x0}}^{${x1}} \\int_{${y0}}^{${y1}} (${fTex}) \\, dy \\, dx`, document.getElementById('k-p1'));
-                katex.render(`\\int_{${y0}}^{${y1}} (${fTex}) \\, dy`, document.getElementById('k-p2-init'));
-                katex.render(`\\left[ ${antiYTex} \\right]_{${y0}}^{${y1}}`, document.getElementById('k-p2-bracket'));
-                katex.render(`= ${substY1Tex} = ${resInternaTex}`, document.getElementById('k-p2-sup'));
-                katex.render(`= ${substY0Tex} = ${toFracTex(valY0Total)}`, document.getElementById('k-p2-inf'));
-                katex.render(`${resInternaTex}`, document.getElementById('k-p2-res'));
-
-                katex.render(`${magLabel} = \\int_{${x0}}^{${x1}} \\left( ${resInternaTex} \\right) dx`, document.getElementById('k-p3-init'));
-                katex.render(`F(x) = ${antiXTex}`, document.getElementById('k-p3-anti'));
-
-                katex.render(`F(${x1}) = ${substX1Tex} = ${evalX1PartsTex} = ${toFracTex(fX1)}`, document.getElementById('k-p4-sup'));
-                katex.render(`F(${x0}) = ${substX0Tex} = ${toFracTex(fX0)}`, document.getElementById('k-p4-inf'));
-                katex.render(`${magLabel} = ${toFracTex(fX1)} - (${toFracTex(fX0)}) = ${finalTex}`, document.getElementById('k-p4-sub'));
-                katex.render(`\\mathbf{${magLabel} = ${finalTex} \\; ${unitLabel}}`, document.getElementById('k-final'));
-
-                katex.render(`M_y = ${toFracTex(myVal)}, \\quad M_x = ${toFracTex(mxVal)} \\implies \\bar{x} = \\frac{M_y}{M} = \\mathbf{${toFracTex(cx)}} \\;(${cx.toFixed(2)}), \\quad \\bar{y} = \\frac{M_x}{M} = \\mathbf{${toFracTex(cy)}} \\;(${cy.toFixed(2)})`, document.getElementById('k-com'));
-
-                // Renderizar los $...$ y $$...$$ dentro de las explicaciones textuales
-                renderInlineMath(container);
-            }
-        }
-
-        function renderInlineMath(rootEl) {
-            // Reemplazar $$...$$ y $...$ en textos explicativos usando KaTeX
-            const walk = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null, false);
-            const nodes = [];
-            let n;
-            while (n = walk.nextNode()) {
-                if (n.nodeValue.includes('$')) nodes.push(n);
-            }
-            nodes.forEach(textNode => {
-                const span = document.createElement('span');
-                let html = textNode.nodeValue
-                    .replace(/\$\$(.+?)\$\$/g, (_, tex) => `<div class="my-1 text-center">${katex.renderToString(tex, { throwOnError: false, displayMode: true })}</div>`)
-                    .replace(/\$(.+?)\$/g, (_, tex) => katex.renderToString(tex, { throwOnError: false, displayMode: false }));
-                span.innerHTML = html;
-                textNode.parentNode.replaceChild(span, textNode);
-            });
-        }
-
-        function crearEtiqueta3D(texto, colorHex, x, y, z, escala = 1) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            ctx.font = 'bold 52px Segoe UI, sans-serif';
-            ctx.fillStyle = colorHex;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(texto, 128, 64);
-            const texture = new THREE.CanvasTexture(canvas);
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true }));
-            sprite.position.set(x, y, z);
-            sprite.scale.set(1.5 * escala, 0.75 * escala, 1);
-            return sprite;
-        }
-
-        function init3D() {
-            const wrapper = document.getElementById('canvas-wrapper');
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xffffff);
-
-            const w = Math.max(300, window.innerWidth - 410);
-            const h = Math.max(300, window.innerHeight - 48);
-
-            camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-            camera.position.set(7.5, -7.5, 6.5);
-            camera.up.set(0, 0, 1);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: false });
-            renderer.setSize(w, h);
-            renderer.setClearColor(0xffffff, 1);
-            wrapper.appendChild(renderer.domElement);
-
-            if (THREE.OrbitControls) {
-                controls = new THREE.OrbitControls(camera, renderer.domElement);
-                controls.enableDamping = true;
-                controls.target.set(1.5, 1.5, 1.5);
-            }
-
-            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
-            dirLight.position.set(10, -10, 20);
-            scene.add(dirLight);
-
-            construirEjesGeoGebra();
-
-            window.addEventListener('resize', () => {
-                const nw = Math.max(300, window.innerWidth - 410);
-                const nh = Math.max(300, window.innerHeight - 48);
-                camera.aspect = nw / nh;
-                camera.updateProjectionMatrix();
-                renderer.setSize(nw, nh);
-            });
-
-            document.querySelectorAll('.math-input').forEach(el => {
-                el.addEventListener('focus', () => activeInput = el);
-            });
-
-            cargarPlantilla();
-            animar();
-        }
-
-        function construirEjesGeoGebra() {
-            axesGroup = new THREE.Group();
-            const grid = new THREE.GridHelper(16, 16, 0x94a3b8, 0xe2e8f0);
-            grid.rotation.x = Math.PI / 2;
-            axesGroup.add(grid);
-
-            axesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-8,0,0), new THREE.Vector3(8,0,0)]), new THREE.LineBasicMaterial({ color: 0xdc2626 })));
-            axesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-8,0), new THREE.Vector3(0,8,0)]), new THREE.LineBasicMaterial({ color: 0x16a34a })));
-            axesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-2), new THREE.Vector3(0,0,8)]), new THREE.LineBasicMaterial({ color: 0x2563eb })));
-
-            axesGroup.add(crearEtiqueta3D("X", "#dc2626", 8.4, 0, 0, 1.1));
-            axesGroup.add(crearEtiqueta3D("Y", "#16a34a", 0, 8.4, 0, 1.1));
-            axesGroup.add(crearEtiqueta3D("Z", "#2563eb", 0, 0, 8.4, 1.1));
-
-            for (let i = 1; i <= 6; i++) {
-                axesGroup.add(crearEtiqueta3D(i.toString(), "#64748b", i, -0.45, 0, 0.65));
-                axesGroup.add(crearEtiqueta3D(i.toString(), "#64748b", -0.45, i, 0, 0.65));
-                axesGroup.add(crearEtiqueta3D(i.toString(), "#64748b", -0.4, -0.4, i, 0.65));
-            }
-            scene.add(axesGroup);
-        }
-
-        function cargarPlantilla() {
-            const p = document.getElementById('presetSelect').value;
-            if (p === 'sensor') {
-                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '2';
-                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
-                document.getElementById('funcInput').value = 'x^2 + x*y + 1';
-                document.getElementById('calcMode').value = 'M';
-            } else if (p === 'pcb') {
-                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '4';
-                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
-                document.getElementById('funcInput').value = 'y';
-                document.getElementById('calcMode').value = 'CoM';
-            } else if (p === 'lamina') {
-                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '4';
-                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
-                document.getElementById('funcInput').value = '2';
-                document.getElementById('calcMode').value = 'CoM';
-            } else if (p === 'solido') {
-                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '2';
-                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '2';
-                document.getElementById('funcInput').value = '4 - x^2 - y';
-                document.getElementById('calcMode').value = 'V';
-            }
-            actualizarVistaPrevia();
-            resolverTodo();
         }
 
         function actualizarVistaPrevia() {
-            const x0 = document.getElementById('xMin').value || '0';
-            const x1 = document.getElementById('xMax').value || '2';
-            const y0 = document.getElementById('yMin').value || '0';
-            const y1 = document.getElementById('yMax').value || '3';
-            const f = document.getElementById('funcInput').value || 'f(x,y)';
-            const mag = document.getElementById('calcMode').value === 'V' ? 'V' : 'M';
-            const tex = `${mag} = \\int_{${x0}}^{${x1}} \\int_{${y0}}^{${y1}} \\left(${f}\\right) \\, dy \\, dx`;
-            if (window.katex) {
-                katex.render(tex, document.getElementById('latexPreview'), { throwOnError: false });
-            }
+            const fStr = document.getElementById('funcInput').value;
+            const xMin = document.getElementById('xMin').value, xMax = document.getElementById('xMax').value;
+            const yMin = document.getElementById('yMin').value, yMax = document.getElementById('yMax').value;
+            const order = document.getElementById('orderSelect').value;
+            const mode = document.getElementById('calcMode').value;
+
+            const fTex = exprToTex(fStr);
+            const x0T = exprToTex(xMin), x1T = exprToTex(xMax);
+            const y0T = exprToTex(yMin), y1T = exprToTex(yMax);
+            const prefix = mode === 'V' ? 'V =' : 'M =';
+
+            const integralTex = order === 'dydx'
+                ? `${prefix} \\int_{${x0T}}^{${x1T}} \\int_{${y0T}}^{${y1T}} \\left(${fTex}\\right) dy \\, dx`
+                : `${prefix} \\int_{${y0T}}^{${y1T}} \\int_{${x0T}}^{${x1T}} \\left(${fTex}\\right) dx \\, dy`;
+
+            try { katex.render(integralTex, document.getElementById('latexPreview'), { throwOnError: false }); } catch (e) {}
+        }
+
+        // Descompone términos y construye antiderivada + evaluación término a término
+        function analizarTerminos(exprStr, v) {
+            const cleaned = normalizar(exprStr).replace(/-/g, '+-');
+            const parts = cleaned.split('+').filter(p => p.trim() !== '');
+            const other = v === 'y' ? 'x' : 'y';
+
+            return parts.map(raw => {
+                const p = raw.trim();
+                const texTerm = exprToTex(p);
+                let antiTex = `\\int (${texTerm})\\,d${v}`;
+                let ruleText = `Se integra respecto a ${v} manteniendo ${other} como constante.`;
+
+                if (!p.includes(v)) {
+                    antiTex = `(${texTerm})\,${v}`;
+                    ruleText = `Como "${p}" no depende de ${v}, actúa como constante multiplicativa y su integral respecto a d${v} agrega el factor ${v}.`;
+                } else if (p === v) {
+                    antiTex = `\\frac{1}{2}${v}^2`;
+                    ruleText = `Por regla de la potencia $\\int u\\,du = \\frac{1}{2}u^2$ con $u = ${v}$.`;
+                } else if (p === `${v}^2`) {
+                    antiTex = `\\frac{1}{3}${v}^3`;
+                    ruleText = `Por regla de la potencia $\\int u^2\\,du = \\frac{1}{3}u^3$ con $u = ${v}$.`;
+                } else if (p === `${v}^3`) {
+                    antiTex = `\\frac{1}{4}${v}^4`;
+                    ruleText = `Por regla de la potencia $\\int u^3\\,du = \\frac{1}{4}u^4$ con $u = ${v}$.`;
+                } else if (p === `x*y` || p === `y*x`) {
+                    antiTex = `\\frac{1}{2}${other}${v}^2`;
+                    ruleText = `El factor ${other} queda fijo y se integra ${v} aplicando $\\int ${v}\\,d${v} = \\frac{1}{2}${v}^2$.`;
+                } else if (p === `${other}*${v}^2` || p === `${v}^2*${other}`) {
+                    antiTex = `\\frac{1}{3}${other}${v}^3`;
+                    ruleText = `El factor ${other} queda fijo y se integra ${v}^2$ aplicando $\\int ${v}^2\\,d${v} = \\frac{1}{3}${v}^3$.`;
+                }
+
+                return { raw: p, texTerm, antiTex, ruleText };
+            });
+        }
+
+        function generarPasoAPaso(fNorm, xMinStr, xMaxStr, yMinStr, yMaxStr, order, mainVal, myVal, mxVal, cx, cy) {
+            const container = document.getElementById('stepsContent');
+            const mode = document.getElementById('calcMode').value;
+            const magLabel = mode === 'V' ? 'V' : 'M';
+            const magNombre = mode === 'V' ? 'Volumen bajo la superficie z = f(x,y)' : (mode === 'M' ? 'Masa total de la lámina / región' : 'Masa total y Centro de Masa de la región');
+            const unitLabel = magLabel === 'V' ? '\\text{u}^3' : '\\text{kg / u.m.}';
+
+            const fTex = exprToTex(fNorm);
+            const x0T = exprToTex(xMinStr), x1T = exprToTex(xMaxStr);
+            const y0T = exprToTex(yMinStr), y1T = exprToTex(yMaxStr);
+
+            const innerVar = order === 'dydx' ? 'y' : 'x';
+            const outerVar = order === 'dydx' ? 'x' : 'y';
+            const limInfInnerStr = order === 'dydx' ? yMinStr : xMinStr;
+            const limSupInnerStr = order === 'dydx' ? yMaxStr : xMaxStr;
+            const limInfInnerTex = order === 'dydx' ? y0T : x0T;
+            const limSupInnerTex = order === 'dydx' ? y1T : x1T;
+
+            const limInfOuterTex = order === 'dydx' ? x0T : y0T;
+            const limSupOuterTex = order === 'dydx' ? x1T : y1T;
+
+            const terminos = analizarTerminos(fNorm, innerVar);
+            const antiCompletaTex = terminos.map(t => t.antiTex).join(' + ').replace(/\+\s*-/g, '- ');
+
+            // Evaluación analítica/numérica simplificada del integrando externo en varios puntos
+            const cXMin = math.compile(normalizar(xMinStr)), cXMax = math.compile(normalizar(xMaxStr));
+            const cYMin = math.compile(normalizar(yMinStr)), cYMax = math.compile(normalizar(yMaxStr));
+            const aOut = order === 'dydx' ? cXMin.evaluate({}) : cYMin.evaluate({});
+            const bOut = order === 'dydx' ? cXMax.evaluate({}) : cYMax.evaluate({});
+            const midOut = 0.5 * (aOut + bOut);
+
+            const evalInnerAt = (uVal) => {
+                if (order === 'dydx') {
+                    const yA = cYMin.evaluate({ x: uVal }), yB = cYMax.evaluate({ x: uVal });
+                    return integrate1D((yv) => math.compile(fNorm).evaluate({ x: uVal, y: yv }), yA, yB, 10);
+                } else {
+                    const xA = cXMin.evaluate({ y: uVal }), xB = cXMax.evaluate({ y: uVal });
+                    return integrate1D((xv) => math.compile(fNorm).evaluate({ x: xv, y: uVal }), xA, xB, 10);
+                }
+            };
+
+            const valAtStart = evalInnerAt(aOut);
+            const valAtMid = evalInnerAt(midOut);
+            const valAtEnd = evalInnerAt(bOut);
+
+            // Construcción de viñetas explicativas por término
+            const listaTerminosHtml = terminos.map((t, idx) => `
+                <div class="note-box">
+                    <strong>Término ${idx + 1} ($${t.texTerm}$):</strong> ${t.ruleText}
+                    <div class="mt-1 font-mono text-xs text-slate-800">Antiderivada parcial: $${t.antiTex}$</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <!-- PASO 1 -->
+                <div class="step-card">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <h3 class="text-base font-extrabold text-blue-900">Paso 1: Planteamiento Formal, Dominio de Integración $R$ y Sentido del Barrido</h3>
+                        <span class="text-[11px] font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Etapa 1 de 5</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed mb-2">
+                        Estamos calculando <strong>${magNombre}</strong> sobre la región bidimensional definida por $x \\in [${x0T}, ${x1T}]$ y $y \\in [${y0T}, ${y1T}]$.
+                        Como seleccionaste el orden <strong>${order === 'dydx' ? 'dy dx (primero integramos respecto a y, luego respecto a x)' : 'dx dy (primero integramos respecto a x, luego respecto a y)'}</strong>,
+                        la integral interna recorre la variable <strong>${innerVar}</strong> desde <strong>${limInfInnerTex}</strong> hasta <strong>${limSupInnerTex}</strong>, y luego la integral externa recorre <strong>${outerVar}</strong> desde <strong>${limInfOuterTex}</strong> hasta <strong>${limSupOuterTex}</strong>.
+                    </p>
+                    <div class="math-box" id="k-p1"></div>
+                </div>
+
+                <!-- PASO 2 -->
+                <div class="step-card">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <h3 class="text-base font-extrabold text-blue-900">Paso 2: Integral Interna respecto a $${innerVar}$ (Regla de Integración Parcial y TFC)</h3>
+                        <span class="text-[11px] font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Etapa 2 de 5</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed mb-2">
+                        Al integrar respecto a <strong>${innerVar}</strong>, la otra variable (<strong>${outerVar}</strong>) se comporta temporalmente como una constante. Separamos la función $f(x,y) = ${fTex}$ en cada uno de sus sumandos para hallar su primitiva respecto a $${innerVar}$:
+                    </p>
+                    ${listaTerminosHtml}
+                    <div class="math-box mt-3" id="k-p2-anti"></div>
+                    <p class="text-xs text-slate-700 leading-relaxed mt-2">
+                        Ahora aplicamos el <strong>Teorema Fundamental del Cálculo</strong> evaluando la primitiva en el límite superior ($${innerVar} = ${limSupInnerTex}$) menos la evaluación en el límite inferior ($${innerVar} = ${limInfInnerTex}$):
+                    </p>
+                    <div class="math-box" id="k-p2-eval"></div>
+                </div>
+
+                <!-- PASO 3 -->
+                <div class="step-card">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <h3 class="text-base font-extrabold text-blue-900">Paso 3: Simplificación del Integrando Externo y Comportamiento de la Sección</h3>
+                        <span class="text-[11px] font-bold bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full">Etapa 3 de 5</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed mb-2">
+                        Una vez restados los límites internos, desaparece la variable $${innerVar}$ y queda una función de una sola variable en términos de <strong>${outerVar}</strong>, denotada como $I_{\\text{int}}(${outerVar})$ (que geométricamente representa el área de cada corte transversal o la acumulación parcial a lo largo de $${innerVar}$).
+                    </p>
+                    <div class="math-box" id="k-p3-fn"></div>
+                    <div class="note-box">
+                        <strong>Comprobación puntual de $I_{\\text{int}}(${outerVar})$ en el intervalo $[${limInfOuterTex}, ${limSupOuterTex}]$:</strong><br>
+                        • En el inicio $${outerVar} = ${aOut.toFixed(2)}$: el valor de la integral interna es $\\approx ${valAtStart.toFixed(4)}$.<br>
+                        • En el punto medio $${outerVar} = ${midOut.toFixed(2)}$: el valor de la integral interna es $\\approx ${valAtMid.toFixed(4)}$.<br>
+                        • En el extremo final $${outerVar} = ${bOut.toFixed(2)}$: el valor de la integral interna es $\\approx ${valAtEnd.toFixed(4)}$.
+                    </div>
+                </div>
+
+                <!-- PASO 4 -->
+                <div class="step-card">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <h3 class="text-base font-extrabold text-blue-900">Paso 4: Evaluación de la Integral Externa respecto a $${outerVar}$ y Resultado Final</h3>
+                        <span class="text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">Etapa 4 de 5</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed mb-2">
+                        Finalmente integramos $I_{\\text{int}}(${outerVar})$ respecto a $${outerVar}$ desde $${limInfOuterTex}$ hasta $${limSupOuterTex}$ y evaluamos los límites exteriores para obtener el valor total acumulado:
+                    </p>
+                    <div class="math-box" id="k-p4-int"></div>
+                    <div class="math-box bg-emerald-50 border-emerald-400" id="k-p4-res"></div>
+                </div>
+
+                <!-- PASO 5 -->
+                <div class="step-card border-l-amber-500">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <h3 class="text-base font-extrabold text-amber-900">Paso 5: Momentos Estáticos ($M_y, M_x$) y Coordenadas del Centro de Masa $(\\bar{x}, \\bar{y})$</h3>
+                        <span class="text-[11px] font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">Etapa 5 de 5</span>
+                    </div>
+                    <p class="text-xs text-slate-700 leading-relaxed mb-2">
+                        Para localizar el <strong>Centro de Masa (CM)</strong> —el punto donde se equilibraría la distribución ponderada por $f(x,y)$ sobre la región $R$—, calculamos primero el momento respecto al eje $Y$ ($M_y$, ponderado por $x$) y el momento respecto al eje $X$ ($M_x$, ponderado por $y$):
+                    </p>
+                    <div class="math-box bg-amber-50/70 border-amber-200" id="k-p5-mom"></div>
+                    <p class="text-xs text-slate-700 leading-relaxed mt-2">
+                        Dividimos cada momento entre la magnitud total (${magLabel} = ${mainVal.toFixed(4)}) para obtener $(\\bar{x}, \\bar{y})$:
+                    </p>
+                    <div class="math-box bg-amber-50/70 border-amber-200" id="k-p5-cm"></div>
+                    <div class="note-box">
+                        <strong>Interpretación física:</strong> El marcador dorado en el visor 3D está ubicado exactamente en $(${cx.toFixed(2)}, ${cy.toFixed(2)})$. Si la región tuviera mayor peso hacia valores altos de $x$ o $y$, el centro de masa se desplaza hacia esa zona de mayor concentración.
+                    </div>
+                </div>
+            `;
+
+            katex.render(
+                `${magLabel} = \\int_{${limInfOuterTex}}^{${limSupOuterTex}} \\left[ \\int_{${limInfInnerTex}}^{${limSupInnerTex}} \\left(${fTex}\\right) d${innerVar} \\right] d${outerVar}`,
+                document.getElementById('k-p1'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `\\int \\left(${fTex}\\right) d${innerVar} = ${antiCompletaTex} + C(${outerVar})`,
+                document.getElementById('k-p2-anti'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `I_{\\text{int}}(${outerVar}) = \\Big[ ${antiCompletaTex} \\Big]_{${innerVar}=${limInfInnerTex}}^{${innerVar}=${limSupInnerTex}} = \\left(${antiCompletaTex}\\right)\\Bigg|_{${innerVar}=${limSupInnerTex}} - \\left(${antiCompletaTex}\\right)\\Bigg|_{${innerVar}=${limInfInnerTex}}`,
+                document.getElementById('k-p2-eval'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `\\text{Expresión externa: } \\int_{${limInfOuterTex}}^{${limSupOuterTex}} I_{\\text{int}}(${outerVar})\\,d${outerVar}, \\qquad I_{\\text{int}}(${midOut.toFixed(2)}) \\approx ${valAtMid.toFixed(4)}`,
+                document.getElementById('k-p3-fn'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `${magLabel} = \\int_{${limInfOuterTex}}^{${limSupOuterTex}} I_{\\text{int}}(${outerVar})\\,d${outerVar}`,
+                document.getElementById('k-p4-int'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `${magLabel} = ${toExactTex(mainVal)} \\approx ${mainVal.toFixed(4)} \\; ${unitLabel}`,
+                document.getElementById('k-p4-res'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `M_y = \\iint_R x\\left(${fTex}\\right)dA = ${myVal.toFixed(4)}, \\qquad M_x = \\iint_R y\\left(${fTex}\\right)dA = ${mxVal.toFixed(4)}`,
+                document.getElementById('k-p5-mom'),
+                { throwOnError: false }
+            );
+
+            katex.render(
+                `\\bar{x} = \\frac{M_y}{${magLabel}} = \\frac{${myVal.toFixed(4)}}{${mainVal.toFixed(4)}} = ${cx.toFixed(4)}, \\qquad \\bar{y} = \\frac{M_x}{${magLabel}} = \\frac{${mxVal.toFixed(4)}}{${mainVal.toFixed(4)}} = ${cy.toFixed(4)} \\implies \\text{CM} = (${cx.toFixed(2)},\\; ${cy.toFixed(2)})`,
+                document.getElementById('k-p5-cm'),
+                { throwOnError: false }
+            );
         }
 
         function resolverTodo() {
+            actualizarVistaPrevia();
             const fNorm = normalizar(document.getElementById('funcInput').value);
-            const x0 = parseFloat(math.evaluate(normalizar(document.getElementById('xMin').value))) || 0;
-            const x1 = parseFloat(math.evaluate(normalizar(document.getElementById('xMax').value))) || 2;
-            const y0 = parseFloat(math.evaluate(normalizar(document.getElementById('yMin').value))) || 0;
-            const y1 = parseFloat(math.evaluate(normalizar(document.getElementById('yMax').value))) || 3;
+            const xMinStr = document.getElementById('xMin').value, xMaxStr = document.getElementById('xMax').value;
+            const yMinStr = document.getElementById('yMin').value, yMaxStr = document.getElementById('yMax').value;
+            const order = document.getElementById('orderSelect').value;
 
-            if (solidGroup) scene.remove(solidGroup);
-            if (comMarker) scene.remove(comMarker);
-            solidGroup = new THREE.Group();
+            try {
+                const compiled = math.compile(fNorm);
+                const mainVal = integrarDoble(compiled, xMinStr, xMaxStr, yMinStr, yMaxStr, order, null, 10);
+                const myVal = integrarDoble(compiled, xMinStr, xMaxStr, yMinStr, yMaxStr, order, (x) => x, 8);
+                const mxVal = integrarDoble(compiled, xMinStr, xMaxStr, yMinStr, yMaxStr, order, (x, y) => y, 8);
 
-            // Integración Numérica de Alta Precisión (200x200)
-            const steps = 200;
-            const dx = (x1 - x0) / steps;
-            const dy = (y1 - y0) / steps;
-            let totalVol = 0, totalMass = 0, momX = 0, momY = 0;
+                const cx = Math.abs(mainVal) > 1e-8 ? myVal / mainVal : 0;
+                const cy = Math.abs(mainVal) > 1e-8 ? mxVal / mainVal : 0;
 
-            for (let i = 0; i < steps; i++) {
-                const x = x0 + (i + 0.5) * dx;
-                for (let j = 0; j < steps; j++) {
-                    const y = y0 + (j + 0.5) * dy;
-                    let val = 0;
-                    try { val = math.evaluate(fNorm, { x, y }); } catch (e) {}
-                    const dA = dx * dy;
-                    totalVol += val * dA;
-                    totalMass += val * dA;
-                    momX += y * val * dA;
-                    momY += x * val * dA;
-                }
+                document.getElementById('outVol').innerText = mainVal.toFixed(4);
+                document.getElementById('outMass').innerText = mainVal.toFixed(4);
+                document.getElementById('outCoM').innerText = `(${cx.toFixed(2)}, ${cy.toFixed(2)})`;
+
+                lastResults = { compiled, fNorm, xMinStr, xMaxStr, yMinStr, yMaxStr, order, mainVal, myVal, mxVal, cx, cy };
+
+                generarPasoAPaso(fNorm, xMinStr, xMaxStr, yMinStr, yMaxStr, order, mainVal, myVal, mxVal, cx, cy);
+                dibujarSolido3D(compiled, xMinStr, xMaxStr, yMinStr, yMaxStr, order, cx, cy, 42);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ==================== MOTOR 3D ESTILO GEOGEBRA ====================
+        function init3D() {
+            const container = document.getElementById('canvas-wrapper');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(8.5, 7.2, 8.5);
+            camera.lookAt(0, 1.8, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.target.set(0, 1.8, 0);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
+            dirLight.position.set(10, 20, 15);
+            scene.add(dirLight);
+
+            construirEjes(6);
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function crearEtiqueta(texto, colorHex, escala = 0.65) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 56px Segoe UI, sans-serif';
+            ctx.fillStyle = colorHex;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(texto, 64, 64);
+            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
+            sprite.scale.set(escala, escala, escala);
+            return sprite;
+        }
+
+        function construirEjes(size) {
+            if (axesGroup) scene.remove(axesGroup);
+            axesGroup = new THREE.Group();
+
+            axesGroup.add(new THREE.GridHelper(size * 2, size * 2, 0x94a3b8, 0xe2e8f0));
+
+            axesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-size, 0, 0), new THREE.Vector3(size, 0, 0)]), new THREE.LineBasicMaterial({ color: 0xdc2626 })));
+            axesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -size), new THREE.Vector3(0, 0, size)]), new THREE.LineBasicMaterial({ color: 0x16a34a })));
+            axesGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, size, 0)]), new THREE.LineBasicMaterial({ color: 0x2563eb })));
+
+            const lX = crearEtiqueta('X', '#dc2626', 0.85); lX.position.set(size + 0.45, 0.25, 0);
+            const lY = crearEtiqueta('Y', '#16a34a', 0.85); lY.position.set(0, 0.25, size + 0.45);
+            const lZ = crearEtiqueta('Z', '#2563eb', 0.85); lZ.position.set(0, size + 0.45, 0);
+            axesGroup.add(lX, lY, lZ);
+
+            for (let i = 1; i <= size; i++) {
+                const nX = crearEtiqueta(i.toString(), '#475569', 0.52);
+                nX.position.set(i, 0.2, -0.35);
+                const nY = crearEtiqueta(i.toString(), '#475569', 0.52);
+                nY.position.set(-0.35, 0.2, i);
+                const nZ = crearEtiqueta(i.toString(), '#475569', 0.52);
+                nZ.position.set(-0.4, i, 0);
+                axesGroup.add(nX, nY, nZ);
             }
 
-            const cx = totalMass !== 0 ? momY / totalMass : (x0 + x1) / 2;
-            const cy = totalMass !== 0 ? momX / totalMass : (y0 + y1) / 2;
+            scene.add(axesGroup);
+        }
 
-            document.getElementById('outVol').innerText = totalVol.toFixed(4);
-            document.getElementById('outMass').innerText = totalMass.toFixed(4);
-            document.getElementById('outCoM').innerText = `(${cx.toFixed(2)}, ${cy.toFixed(2)})`;
+        function dibujarSolido3D(compiledFn, xMinStr, xMaxStr, yMinStr, yMaxStr, order, cx, cy, segs = 42) {
+            if (solidGroup) scene.remove(solidGroup);
+            if (comMarker) scene.remove(comMarker);
 
-            // Construcción de Superficie 3D
-            const res = 40;
-            const geom = new THREE.BufferGeometry();
-            const vertices = [], indices = [], colors = [];
-            let maxZ = 0.1;
+            solidGroup = new THREE.Group();
+            const cXMin = math.compile(normalizar(xMinStr)), cXMax = math.compile(normalizar(xMaxStr));
+            const cYMin = math.compile(normalizar(yMinStr)), cYMax = math.compile(normalizar(yMaxStr));
+
+            const vertices = [], indices = [], baseVerts = [];
+            let minZ = Infinity, maxZ = -Infinity;
             const gridPts = [];
 
-            for (let i = 0; i <= res; i++) {
-                const x = x0 + (i / res) * (x1 - x0);
+            for (let i = 0; i <= segs; i++) {
+                const uNorm = i / segs;
                 const row = [];
-                for (let j = 0; j <= res; j++) {
-                    const y = y0 + (j / res) * (y1 - y0);
-                    let z = 0;
-                    try { z = math.evaluate(fNorm, { x, y }); } catch (e) {}
+                for (let j = 0; j <= segs; j++) {
+                    const vNorm = j / segs;
+                    let x = 0, y = 0, z = 0;
+                    if (order === 'dydx') {
+                        const a = cXMin.evaluate({}), b = cXMax.evaluate({});
+                        x = a + uNorm * (b - a);
+                        const y1 = cYMin.evaluate({ x }), y2 = cYMax.evaluate({ x });
+                        y = y1 + vNorm * (y2 - y1);
+                    } else {
+                        const c = cYMin.evaluate({}), d = cYMax.evaluate({});
+                        y = c + vNorm * (d - c);
+                        const x1 = cXMin.evaluate({ y }), x2 = cXMax.evaluate({ y });
+                        x = x1 + uNorm * (x2 - x1);
+                    }
+                    z = compiledFn.evaluate({ x, y });
                     if (!isFinite(z)) z = 0;
-                    if (Math.abs(z) > maxZ) maxZ = Math.abs(z);
+                    minZ = Math.min(minZ, z);
+                    maxZ = Math.max(maxZ, z);
                     row.push({ x, y, z });
                 }
                 gridPts.push(row);
             }
 
-            for (let i = 0; i <= res; i++) {
-                for (let j = 0; j <= res; j++) {
-                    const p = gridPts[i][j];
-                    vertices.push(p.x, p.y, p.z);
-                    const ratio = Math.min(1, Math.max(0, p.z / maxZ));
-                    colors.push(0.05 + ratio * 0.1, 0.45 + ratio * 0.35, 0.95);
+            const zVisualScale = maxZ > 5.5 ? (5.2 / maxZ) : 1.0;
+
+            for (let i = 0; i <= segs; i++) {
+                for (let j = 0; j <= segs; j++) {
+                    const { x, y, z } = gridPts[i][j];
+                    vertices.push(x, z * zVisualScale, y);
+                    baseVerts.push(x, 0.015, y);
                 }
             }
 
-            for (let i = 0; i < res; i++) {
-                for (let j = 0; j < res; j++) {
-                    const a = i * (res + 1) + j, b = (i + 1) * (res + 1) + j;
-                    const c = (i + 1) * (res + 1) + (j + 1), d = i * (res + 1) + (j + 1);
+            for (let i = 0; i < segs; i++) {
+                for (let j = 0; j < segs; j++) {
+                    const a = i * (segs + 1) + j, b = (i + 1) * (segs + 1) + j;
+                    const c = (i + 1) * (segs + 1) + (j + 1), d = i * (segs + 1) + (j + 1);
                     indices.push(a, b, d, b, c, d);
                 }
             }
 
-            geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geom.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            geom.setIndex(indices);
-            geom.computeVertexNormals();
+            const surfGeo = new THREE.BufferGeometry();
+            surfGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            surfGeo.setIndex(indices);
+            surfGeo.computeVertexNormals();
 
-            solidGroup.add(new THREE.Mesh(geom, new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })));
-            solidGroup.add(new THREE.Mesh(geom, new THREE.MeshBasicMaterial({ color: 0x0369a1, wireframe: true, transparent: true, opacity: 0.2 })));
+            solidGroup.add(new THREE.Mesh(surfGeo, new THREE.MeshPhongMaterial({
+                color: 0x0284c7,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.88,
+                shininess: 55
+            })));
+            solidGroup.add(new THREE.Mesh(surfGeo, new THREE.MeshBasicMaterial({
+                color: 0x0369a1,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.22
+            })));
 
-            const baseVerts = vertices.map((v, idx) => (idx % 3 === 2 ? 0.01 : v));
-            const baseGeom = new THREE.BufferGeometry();
-            baseGeom.setAttribute('position', new THREE.Float32BufferAttribute(baseVerts, 3));
-            baseGeom.setIndex(indices);
-            solidGroup.add(new THREE.Mesh(baseGeom, new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide })));
+            const baseGeo = new THREE.BufferGeometry();
+            baseGeo.setAttribute('position', new THREE.Float32BufferAttribute(baseVerts, 3));
+            baseGeo.setIndex(indices);
+            solidGroup.add(new THREE.Mesh(baseGeo, new THREE.MeshBasicMaterial({
+                color: 0x38bdf8,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.28
+            })));
 
             scene.add(solidGroup);
 
-            // Marcador Centro de Masa
-            let cz = 0;
-            try { cz = math.evaluate(fNorm, { x: cx, y: cy }); } catch (e) {}
             comMarker = new THREE.Group();
-            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 20), new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706 }));
-            sphere.position.set(cx, cy, cz / 2);
-            comMarker.add(sphere);
-            comMarker.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(cx, cy, 0), new THREE.Vector3(cx, cy, Math.max(cz, 1.5))]), new THREE.LineBasicMaterial({ color: 0xd97706 })));
-            comMarker.add(crearEtiqueta3D(`CM (${cx.toFixed(2)}, ${cy.toFixed(2)})`, "#b45309", cx, cy, Math.max(cz, 1.5) + 0.5, 0.85));
+            comMarker.add(new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 20), new THREE.MeshBasicMaterial({ color: 0xf59e0b })));
+            comMarker.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1.8, 0)]), new THREE.LineBasicMaterial({ color: 0xd97706 })));
+            comMarker.position.set(cx, 0.04, cy);
             scene.add(comMarker);
 
-            generarPasoAPasoDetallado(fNorm, x0, x1, y0, y1, totalMass, momY, momX, cx, cy);
+            lastResults.zVisualScale = zVisualScale;
+            lastResults.gridPts = gridPts;
+            lastResults.minZ = minZ;
+            lastResults.maxZ = maxZ;
+        }
+
+        // ==================== MOTOR DE SIMULACIÓN 3D ====================
+        function toggleSimulacion() {
+            simRunning = !simRunning;
+            const btn = document.getElementById('btnSimPlay');
+            const banner = document.getElementById('simHudBanner');
+
+            if (simRunning) {
+                if (simProgress >= 0.99) simProgress = 0.02;
+                btn.innerText = "⏸ Pausar";
+                btn.className = "bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded text-[11px] cursor-pointer transition shrink-0";
+                banner.classList.remove('hidden');
+            } else {
+                btn.innerText = "▶ Simular";
+                btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded text-[11px] cursor-pointer transition shrink-0";
+            }
+        }
+
+        function resetSimulacion() {
+            simRunning = false;
+            simProgress = 1.0;
+            if (simGroup) { scene.remove(simGroup); simGroup = null; }
+            if (solidGroup) {
+                solidGroup.visible = true;
+                solidGroup.position.set(0, 0, 0);
+                solidGroup.rotation.set(0, 0, 0);
+            }
+            document.getElementById('btnSimPlay').innerText = "▶ Simular";
+            document.getElementById('btnSimPlay').className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded text-[11px] cursor-pointer transition shrink-0";
+            document.getElementById('simProgressBar').style.width = "100%";
+            document.getElementById('simStatusText').innerText = "Listo — Presiona \"▶ Simular\" para animar el sólido";
+            document.getElementById('simHudBanner').classList.add('hidden');
+        }
+
+        function cambiarModoSimulacion() {
+            if (simGroup) { scene.remove(simGroup); simGroup = null; }
+            if (solidGroup) {
+                solidGroup.visible = true;
+                solidGroup.position.set(0, 0, 0);
+                solidGroup.rotation.set(0, 0, 0);
+            }
+            simProgress = 0.02;
+            if (!simRunning) toggleSimulacion();
+        }
+
+        function actualizarFrameSimulacion(dt) {
+            if (!simRunning || !lastResults.compiled) return;
+            const mode = document.getElementById('simMode').value;
+            simClock += dt;
+
+            if (mode === 'riemann') {
+                simProgress = Math.min(simProgress + dt * 0.30, 1.0);
+                document.getElementById('simProgressBar').style.width = `${(simProgress * 100).toFixed(0)}%`;
+
+                if (solidGroup) solidGroup.visible = simProgress >= 0.99;
+                if (simGroup) scene.remove(simGroup);
+
+                if (simProgress < 0.99) {
+                    simGroup = new THREE.Group();
+                    const N = 14, totalBlocks = N * N;
+                    const activeBlocks = Math.max(1, Math.floor(simProgress * totalBlocks));
+                    const scaleZ = lastResults.zVisualScale || 1;
+
+                    const cXMin = math.compile(normalizar(lastResults.xMinStr)), cXMax = math.compile(normalizar(lastResults.xMaxStr));
+                    const cYMin = math.compile(normalizar(lastResults.yMinStr)), cYMax = math.compile(normalizar(lastResults.yMaxStr));
+                    const a = cXMin.evaluate({}), b = cXMax.evaluate({}), dx = (b - a) / N;
+
+                    let count = 0;
+                    for (let i = 0; i < N; i++) {
+                        const xm = a + (i + 0.5) * dx;
+                        const y1 = cYMin.evaluate({ x: xm }), y2 = cYMax.evaluate({ x: xm });
+                        const dy = (y2 - y1) / N;
+                        for (let j = 0; j < N; j++) {
+                            if (count >= activeBlocks) break;
+                            const ym = y1 + (j + 0.5) * dy;
+                            let pz = lastResults.compiled.evaluate({ x: xm, y: ym });
+                            if (!isFinite(pz)) pz = 0;
+                            const hVis = Math.max(Math.abs(pz * scaleZ), 0.04);
+
+                            const box = new THREE.Mesh(
+                                new THREE.BoxGeometry(Math.abs(dx) * 0.92, hVis, Math.abs(dy) * 0.92),
+                                new THREE.MeshPhongMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.85 })
+                            );
+                            box.position.set(xm, hVis / 2, ym);
+                            simGroup.add(box);
+                            count++;
+                        }
+                    }
+                    scene.add(simGroup);
+                    const partial = lastResults.mainVal * (activeBlocks / totalBlocks);
+                    const msg = `Riemann: ${activeBlocks}/${totalBlocks} prismas | Integral ≈ ${partial.toFixed(2)}`;
+                    document.getElementById('simStatusText').innerText = msg;
+                    document.getElementById('simHudText').innerText = msg;
+                } else {
+                    simRunning = false;
+                    document.getElementById('btnSimPlay').innerText = "▶ Simular";
+                    document.getElementById('btnSimPlay').className = "bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded text-[11px] cursor-pointer transition shrink-0";
+                    const doneMsg = `Integración completa = ${lastResults.mainVal.toFixed(4)}`;
+                    document.getElementById('simStatusText').innerText = doneMsg;
+                    document.getElementById('simHudText').innerText = doneMsg;
+                }
+            } else if (mode === 'slice') {
+                if (solidGroup) solidGroup.visible = true;
+                if (simGroup) scene.remove(simGroup);
+                simGroup = new THREE.Group();
+
+                const ratio = 0.5 + 0.5 * Math.sin(simClock * 1.8);
+                document.getElementById('simProgressBar').style.width = `${(ratio * 100).toFixed(0)}%`;
+
+                const scaleZ = lastResults.zVisualScale || 1;
+                const cXMin = math.compile(normalizar(lastResults.xMinStr)), cXMax = math.compile(normalizar(lastResults.xMaxStr));
+                const cYMin = math.compile(normalizar(lastResults.yMinStr)), cYMax = math.compile(normalizar(lastResults.yMaxStr));
+                const a = cXMin.evaluate({}), b = cXMax.evaluate({});
+                const xSlice = a + ratio * (b - a);
+                const y1 = cYMin.evaluate({ x: xSlice }), y2 = cYMax.evaluate({ x: xSlice });
+
+                const areaSlice = integrate1D((yVal) => lastResults.compiled.evaluate({ x: xSlice, y: yVal }), y1, y2, 10);
+
+                const steps = 32, sVerts = [], sIdx = [];
+                for (let k = 0; k <= steps; k++) {
+                    const v = y1 + (k / steps) * (y2 - y1);
+                    let pz = lastResults.compiled.evaluate({ x: xSlice, y: v });
+                    if (!isFinite(pz)) pz = 0;
+                    sVerts.push(xSlice, 0, v, xSlice, pz * scaleZ, v);
+                    if (k < steps) {
+                        const i0 = k * 2, i1 = k * 2 + 1, i2 = (k + 1) * 2 + 1, i3 = (k + 1) * 2;
+                        sIdx.push(i0, i1, i3, i1, i2, i3);
+                    }
+                }
+                const sGeo = new THREE.BufferGeometry();
+                sGeo.setAttribute('position', new THREE.Float32BufferAttribute(sVerts, 3));
+                sGeo.setIndex(sIdx);
+                simGroup.add(new THREE.Mesh(sGeo, new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })));
+                scene.add(simGroup);
+
+                const msg = `Corte x = ${xSlice.toFixed(2)} | Área A(x) = ${areaSlice.toFixed(3)}`;
+                document.getElementById('simStatusText').innerText = msg;
+                document.getElementById('simHudText').innerText = msg;
+            } else if (mode === 'heat') {
+                if (solidGroup) solidGroup.visible = true;
+                if (simGroup) scene.remove(simGroup);
+                simGroup = new THREE.Group();
+
+                const wave = 0.5 + 0.5 * Math.sin(simClock * 3.0);
+                document.getElementById('simProgressBar').style.width = `${(wave * 100).toFixed(0)}%`;
+
+                const pts = lastResults.gridPts || [];
+                const scaleZ = lastResults.zVisualScale || 1;
+                if (pts.length > 0) {
+                    const pVerts = [];
+                    for (let i = 2; i < pts.length; i += 3) {
+                        for (let j = 2; j < pts[i].length; j += 3) {
+                            const p = pts[i][j];
+                            const phase = ((simClock * 0.9 + (i + j) * 0.05) % 1.0);
+                            pVerts.push(p.x, phase * p.z * scaleZ, p.y);
+                        }
+                    }
+                    const pGeo = new THREE.BufferGeometry();
+                    pGeo.setAttribute('position', new THREE.Float32BufferAttribute(pVerts, 3));
+                    simGroup.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xf43f5e, size: 0.14 })));
+                }
+                scene.add(simGroup);
+
+                const msg = `Flujo Térmico / Densidad | Máx Z = ${lastResults.maxZ.toFixed(2)}`;
+                document.getElementById('simStatusText').innerText = msg;
+                document.getElementById('simHudText').innerText = msg;
+            } else if (mode === 'equilibrium') {
+                if (solidGroup) {
+                    solidGroup.visible = true;
+                    const cx = lastResults.cx || 0, cy = lastResults.cy || 0;
+                    const tiltX = Math.sin(simClock * 2.5) * 0.08;
+                    const tiltZ = Math.cos(simClock * 2.0) * 0.08;
+                    solidGroup.position.set(cx, 0.25, cy);
+                    solidGroup.rotation.set(tiltX, 0, tiltZ);
+                    solidGroup.position.sub(new THREE.Vector3(cx, 0, cy).applyEuler(solidGroup.rotation));
+                    solidGroup.position.y += 0.22;
+                }
+                const msg = `Equilibrio en CM = (${lastResults.cx.toFixed(2)}, ${lastResults.cy.toFixed(2)})`;
+                document.getElementById('simStatusText').innerText = msg;
+                document.getElementById('simHudText').innerText = msg;
+            }
         }
 
         function cambiarPestana(tab) {
-            const is3D = tab === '3d';
-            document.getElementById('steps-panel').style.display = is3D ? 'none' : 'block';
-            document.getElementById('cameraControls').style.display = is3D ? 'flex' : 'none';
-            document.getElementById('btnTab3D').className = is3D ? "px-4 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white cursor-pointer" : "px-4 py-1.5 rounded-md text-xs font-bold bg-white text-slate-700 border border-slate-300 cursor-pointer";
-            document.getElementById('btnTabSteps').className = !is3D ? "px-4 py-1.5 rounded-md text-xs font-bold bg-sky-600 text-white cursor-pointer" : "px-4 py-1.5 rounded-md text-xs font-bold bg-white text-slate-700 border border-slate-300 cursor-pointer";
+            document.getElementById('steps-panel').style.display = tab === 'steps' ? 'block' : 'none';
+            document.getElementById('cameraControls').style.display = tab === '3d' ? 'flex' : 'none';
+            document.getElementById('btnTab3D').className = tab === '3d'
+                ? 'px-3.5 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white cursor-pointer'
+                : 'px-3.5 py-1.5 rounded-md text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 cursor-pointer';
+            document.getElementById('btnTabSteps').className = tab === 'steps'
+                ? 'px-3.5 py-1.5 rounded-md text-xs font-bold bg-blue-600 text-white cursor-pointer'
+                : 'px-3.5 py-1.5 rounded-md text-xs font-bold bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 cursor-pointer';
         }
 
-        function setCamara(v) {
-            if (v === 'iso') { camera.position.set(7.5, -7.5, 6.5); if (controls) controls.target.set(1.5, 1.5, 1.5); }
-            else { camera.position.set(2, 1.5, 11); if (controls) controls.target.set(2, 1.5, 0); }
-            if (controls) controls.update();
+        function setCamara(vista) {
+            if (vista === 'iso') camera.position.set(8.5, 7.2, 8.5);
+            else if (vista === 'xy') camera.position.set(0.01, 13, 0.01);
+            controls.target.set(0, 1.8, 0);
         }
 
         function toggleMalla() { if (axesGroup) axesGroup.visible = !axesGroup.visible; }
         function toggleKeyboard() { document.getElementById('virtual-keyboard').classList.toggle('hidden'); }
-        function insertSym(s) {
-            if (!activeInput) return;
-            const pos = activeInput.selectionStart;
-            activeInput.value = activeInput.value.slice(0, pos) + s + activeInput.value.slice(activeInput.selectionEnd);
-            activeInput.focus(); actualizarVistaPrevia();
-        }
-        function delChar() { if (activeInput) { activeInput.value = activeInput.value.slice(0, -1); actualizarVistaPrevia(); } }
-        function limpiarTodo() {
-            document.getElementById('funcInput').value = '';
-            document.getElementById('outVol').innerText = '--';
-            document.getElementById('outMass').innerText = '--';
-            document.getElementById('outCoM').innerText = '--';
-            if (solidGroup) scene.remove(solidGroup);
-            if (comMarker) scene.remove(comMarker);
+
+        function insertSym(sym) {
+            if (!activeInput) activeInput = document.getElementById('funcInput');
+            const start = activeInput.selectionStart || activeInput.value.length;
+            const end = activeInput.selectionEnd || activeInput.value.length;
+            activeInput.value = activeInput.value.slice(0, start) + sym + activeInput.value.slice(end);
+            activeInput.focus();
             actualizarVistaPrevia();
+        }
+
+        function delChar() {
+            if (!activeInput || activeInput.value.length === 0) return;
+            activeInput.value = activeInput.value.slice(0, -1);
+            actualizarVistaPrevia();
+        }
+
+        function cargarPlantilla() {
+            const p = document.getElementById('presetSelect').value;
+            document.getElementById('orderSelect').value = 'dydx';
+            if (p === 'sensor') {
+                document.getElementById('calcMode').value = 'V';
+                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '2';
+                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
+                document.getElementById('funcInput').value = 'x^2 + x*y + 1';
+            } else if (p === 'pcb') {
+                document.getElementById('calcMode').value = 'CoM';
+                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '4';
+                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
+                document.getElementById('funcInput').value = 'y';
+            } else if (p === 'lamina') {
+                document.getElementById('calcMode').value = 'CoM';
+                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '4';
+                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
+                document.getElementById('funcInput').value = '2';
+            } else if (p === 'solido') {
+                document.getElementById('calcMode').value = 'V';
+                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '2';
+                document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '2';
+                document.getElementById('funcInput').value = '4 - x^2 - y';
+            } else if (p === 'curvas') {
+                document.getElementById('calcMode').value = 'V';
+                document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '2';
+                document.getElementById('yMin').value = 'x^2'; document.getElementById('yMax').value = '2*x';
+                document.getElementById('funcInput').value = 'x + y + 1';
+            }
+            resetSimulacion();
+            resolverTodo();
+        }
+
+        function limpiarTodo() {
+            document.getElementById('xMin').value = '0'; document.getElementById('xMax').value = '2';
+            document.getElementById('yMin').value = '0'; document.getElementById('yMax').value = '3';
+            document.getElementById('funcInput').value = 'x^2 + x*y + 1';
+            resetSimulacion();
+            resolverTodo();
         }
 
         function exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(16); doc.text("Reporte Técnico - Cálculo Vectorial", 14, 20);
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, 210, 24, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.text("VectorCalc Studio - Reporte de Cálculo Multivariable", 14, 15);
+            doc.setTextColor(15, 23, 42);
             doc.setFontSize(11);
-            doc.text(`Función: f(x,y) = ${document.getElementById('funcInput').value}`, 14, 30);
-            doc.text(`Volumen (V): ${document.getElementById('outVol').innerText}`, 14, 38);
-            doc.text(`Masa Total (M): ${document.getElementById('outMass').innerText}`, 14, 46);
-            doc.text(`Centro de Masa: ${document.getElementById('outCoM').innerText}`, 14, 54);
-            cambiarPestana('3d');
+            doc.text(`Función / Densidad: f(x,y) = ${document.getElementById('funcInput').value}`, 14, 36);
+            doc.text(`Límites X: [${document.getElementById('xMin').value}, ${document.getElementById('xMax').value}]   |   Límites Y: [${document.getElementById('yMin').value}, ${document.getElementById('yMax').value}]`, 14, 44);
+            if (lastResults.mainVal !== undefined) {
+                doc.text(`• Volumen / Masa Total: ${lastResults.mainVal.toFixed(4)}`, 14, 54);
+                doc.text(`• Centro de Masa (x̄, ȳ): (${lastResults.cx.toFixed(4)}, ${lastResults.cy.toFixed(4)})`, 14, 62);
+            }
+            try {
+                renderer.render(scene, camera);
+                doc.addImage(renderer.domElement.toDataURL('image/png'), 'PNG', 14, 72, 182, 105);
+            } catch (e) {}
+            doc.save("VectorCalc_Studio_Reporte.pdf");
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-wrapper');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        let lastTime = performance.now();
+        function animate(now = performance.now()) {
+            requestAnimationFrame(animate);
+            const dt = Math.min((now - lastTime) / 1000, 0.1);
+            lastTime = now;
+            actualizarFrameSimulacion(dt);
+            controls.update();
             renderer.render(scene, camera);
-            doc.addImage(renderer.domElement.toDataURL('image/png'), 'PNG', 14, 62, 180, 105);
-            doc.save("Solucion_Calculo_Vectorial.pdf");
         }
 
-        function animar() {
-            requestAnimationFrame(animar);
-            if (controls) controls.update();
-            if (renderer && scene && camera) renderer.render(scene, camera);
-        }
-
-        window.onload = init3D;
+        window.onload = () => {
+            init3D();
+            resolverTodo();
+        };
     </script>
 </body>
 </html>
